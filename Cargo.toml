@@ -10,4 +10,3 @@ edition = "2018"
 macroquad = "0.3.3"
 tungstenite = '0.13.0'
 url = '2.2.2'
-env_logger = '0.8.3'

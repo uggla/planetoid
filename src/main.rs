@@ -12,8 +12,12 @@ struct Ship {
 }
 
 impl Ship {
-    fn new(pos: Vec2, rot: f32, vel: Vec2) -> Self {
-        Self { pos, rot, vel }
+    fn new() -> Self {
+        Self {
+            pos: screen_center(),
+            rot: 0.,
+            vel: Vec2::new(0., 0.),
+        }
     }
 
     fn rotation(&self) -> f32 {
@@ -95,24 +99,47 @@ struct Asteroid {
 }
 
 impl Asteroid {
-    fn new(
-        pos: Vec2,
-        vel: Vec2,
-        rot: f32,
-        rot_speed: f32,
-        size: f32,
-        sides: u8,
-        collided: bool,
-    ) -> Self {
+    fn new() -> Self {
         Self {
-            pos,
-            vel,
-            rot,
-            rot_speed,
-            size,
-            sides,
-            collided,
+            pos: screen_center()
+                + Vec2::new(rand::gen_range(-1., 1.), rand::gen_range(-1., 1.)).normalize()
+                    * screen_width().min(screen_height())
+                    / 2.,
+            vel: Vec2::new(rand::gen_range(-1., 1.), rand::gen_range(-1., 1.)),
+            rot: 0.,
+            rot_speed: rand::gen_range(-2., 2.),
+            size: screen_width().min(screen_height()) / 10.,
+            sides: 8,
+            collided: false,
         }
+    }
+
+    fn new_split(pos: Vec2, velx: f32, vely: f32, size: f32, sides: u8) -> Vec<Asteroid> {
+        let mut new_asteroids = Vec::new();
+
+        let asteriod1 = Self {
+            pos,
+            vel: Vec2::new(vely, -velx).normalize() * rand::gen_range(1., 3.),
+            rot: rand::gen_range(0., 360.),
+            rot_speed: rand::gen_range(-2., 2.),
+            size: size * 0.8,
+            sides: sides - 1,
+            collided: false,
+        };
+
+        let asteriod2 = Self {
+            pos,
+            vel: Vec2::new(-vely, velx).normalize(),
+            rot: rand::gen_range(0., 360.),
+            rot_speed: rand::gen_range(-2., 2.),
+            size: size * 0.8,
+            sides: sides - 1,
+            collided: false,
+        };
+
+        new_asteroids.push(asteriod1);
+        new_asteroids.push(asteriod2);
+        new_asteroids
     }
 
     fn draw(&self) {
@@ -122,26 +149,31 @@ impl Asteroid {
     }
 }
 
-fn wrap_around(v: &Vec2) -> Vec2 {
-    let mut vr = Vec2::new(v.x, v.y);
-    if vr.x > screen_width() {
-        vr.x = 0.;
+fn wrap_around(pos: &Vec2) -> Vec2 {
+    let mut wrapped_pos = Vec2::new(pos.x, pos.y);
+    if wrapped_pos.x > screen_width() {
+        wrapped_pos.x = 0.;
     }
-    if vr.x < 0. {
-        vr.x = screen_width()
+    if wrapped_pos.x < 0. {
+        wrapped_pos.x = screen_width()
     }
-    if vr.y > screen_height() {
-        vr.y = 0.;
+    if wrapped_pos.y > screen_height() {
+        wrapped_pos.y = 0.;
     }
-    if vr.y < 0. {
-        vr.y = screen_height()
+    if wrapped_pos.y < 0. {
+        wrapped_pos.y = screen_height()
     }
-    return vr;
+    return wrapped_pos;
+}
+
+fn screen_center() -> Vec2 {
+    let screen_center = Vec2::new(screen_width() / 2., screen_height() / 2.);
+    screen_center
 }
 
 fn window_conf() -> Conf {
     Conf {
-        window_title: "Planetoid".to_owned(),
+        window_title: String::from("Planetoid"),
         fullscreen: false,
         window_width: 1024,
         window_height: 768,
@@ -152,31 +184,16 @@ fn window_conf() -> Conf {
 
 #[macroquad::main(window_conf)]
 async fn main() {
+    info!("Starting game.");
     let mut gameover = false;
     let mut last_shot = get_time();
-    let mut ship = Ship::new(
-        Vec2::new(screen_width() / 2., screen_height() / 2.),
-        0.,
-        Vec2::new(0., 0.),
-    );
+    let mut ship = Ship::new();
 
     let mut bullets = Vec::new();
     let mut asteroids = Vec::new();
 
-    let mut screen_center = Vec2::new(screen_width() / 2., screen_height() / 2.);
     for _ in 0..10 {
-        asteroids.push(Asteroid::new(
-            screen_center
-                + Vec2::new(rand::gen_range(-1., 1.), rand::gen_range(-1., 1.)).normalize()
-                    * screen_width().min(screen_height())
-                    / 2.,
-            Vec2::new(rand::gen_range(-1., 1.), rand::gen_range(-1., 1.)),
-            0.,
-            rand::gen_range(-2., 2.),
-            screen_width().min(screen_height()) / 10.,
-            8,
-            false,
-        ))
+        asteroids.push(Asteroid::new());
     }
 
     thread::spawn(|| {
@@ -200,8 +217,6 @@ async fn main() {
         }
     });
 
-    env_logger::init();
-
     loop {
         if gameover {
             clear_background(LIGHTGRAY);
@@ -220,29 +235,13 @@ async fn main() {
                 DARKGRAY,
             );
             if is_key_down(KeyCode::Enter) {
-                ship = Ship::new(
-                    Vec2::new(screen_width() / 2., screen_height() / 2.),
-                    0.,
-                    Vec2::new(0., 0.),
-                );
+                info!("Restarting game.");
+                ship = Ship::new();
                 bullets = Vec::new();
                 asteroids = Vec::new();
                 gameover = false;
-                screen_center = Vec2::new(screen_width() / 2., screen_height() / 2.);
                 for _ in 0..10 {
-                    asteroids.push(Asteroid::new(
-                        screen_center
-                            + Vec2::new(rand::gen_range(-1., 1.), rand::gen_range(-1., 1.))
-                                .normalize()
-                                * screen_width().min(screen_height())
-                                / 2.,
-                        Vec2::new(rand::gen_range(-1., 1.), rand::gen_range(-1., 1.)),
-                        0.,
-                        rand::gen_range(-2., 2.),
-                        screen_width().min(screen_height()) / 10.,
-                        6,
-                        false,
-                    ))
+                    asteroids.push(Asteroid::new());
                 }
             }
             next_frame().await;
@@ -303,26 +302,33 @@ async fn main() {
                     asteroid.collided = true;
                     bullet.collided = true;
                     if asteroid.sides > 4 {
-                        new_asteroids.push(Asteroid::new(
+                        new_asteroids = Asteroid::new_split(
                             asteroid.pos,
-                            Vec2::new(bullet.vel.y, -bullet.vel.x).normalize()
-                                * rand::gen_range(1., 3.),
-                            rand::gen_range(0., 360.),
-                            rand::gen_range(-2., 2.),
-                            asteroid.size * 0.8,
-                            asteroid.sides - 1,
-                            false,
-                        ));
-                        new_asteroids.push(Asteroid::new(
-                            asteroid.pos,
-                            Vec2::new(-bullet.vel.y, bullet.vel.x).normalize()
-                                * rand::gen_range(1., 3.),
-                            rand::gen_range(0., 360.),
-                            rand::gen_range(-2., 2.),
-                            asteroid.size * 0.8,
-                            asteroid.sides - 1,
-                            false,
-                        ))
+                            bullet.vel.x,
+                            bullet.vel.y,
+                            asteroid.size,
+                            asteroid.sides,
+                        );
+                        // new_asteroids.push(Asteroid::new(
+                        //     asteroid.pos,
+                        //     Vec2::new(bullet.vel.y, -bullet.vel.x).normalize()
+                        //         * rand::gen_range(1., 3.),
+                        //     rand::gen_range(0., 360.),
+                        //     rand::gen_range(-2., 2.),
+                        //     asteroid.size * 0.8,
+                        //     asteroid.sides - 1,
+                        //     false,
+                        // ));
+                        // new_asteroids.push(Asteroid::new(
+                        //     asteroid.pos,
+                        //     Vec2::new(-bullet.vel.y, bullet.vel.x).normalize()
+                        //         * rand::gen_range(1., 3.),
+                        //     rand::gen_range(0., 360.),
+                        //     rand::gen_range(-2., 2.),
+                        //     asteroid.size * 0.8,
+                        //     asteroid.sides - 1,
+                        //     false,
+                        // ))
                     }
                     break;
                 }
