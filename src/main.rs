@@ -9,8 +9,30 @@ use crate::ship::Ship;
 use crate::{asteroid::Asteroid, collision::is_collided};
 use macroquad::prelude::*;
 use std::thread;
+use structopt::StructOpt;
 use tungstenite::{connect, Message};
 use url::Url;
+
+#[derive(StructOpt, Debug)]
+#[structopt(name = "planetoid", version = "0.1.0")]
+/// Planetoid is a asteroid clone
+
+struct Opt {
+    // /// Verbose mode (-v, -vv, -vvv, etc.)
+    // #[structopt(short, long, parse(from_occurrences))]
+    // verbose: u8,
+    /// Address
+    #[structopt(short, long, default_value = "localhost")]
+    address: String,
+
+    /// Port
+    #[structopt(short, long, default_value = "8080")]
+    port: u16,
+
+    /// Network mode
+    #[structopt(short, long, default_value = "host", possible_values = &["host","guest","spectator"])]
+    mode: String,
+}
 
 fn window_conf() -> Conf {
     Conf {
@@ -25,6 +47,8 @@ fn window_conf() -> Conf {
 
 #[macroquad::main(window_conf)]
 async fn main() {
+    let opt = Opt::from_args();
+    println!("{:#?}", opt);
     info!("Starting game.");
     let mut gameover = false;
     let mut last_shot = get_time();
@@ -35,6 +59,22 @@ async fn main() {
 
     for _ in 0..10 {
         asteroids.push(Asteroid::new());
+    }
+
+    let mut asteroids_serde = Vec::new();
+    for asteroid in &asteroids {
+        asteroids_serde.push(asteroid.to_serde());
+    }
+    let serialized = serde_json::to_string(&asteroids_serde).unwrap();
+    println!("{}", serialized);
+
+    asteroids.clear();
+    asteroids_serde.clear();
+    dbg!(&asteroids_serde);
+    asteroids_serde = serde_json::from_str(&&serialized).unwrap();
+    dbg!(&asteroids_serde);
+    for asteroid in &asteroids_serde {
+        asteroids.push(Asteroid::from_serde(asteroid));
     }
 
     thread::spawn(|| {
