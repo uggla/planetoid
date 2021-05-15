@@ -67,6 +67,7 @@ async fn main() {
             if asteroids.len() > 0 {
                 text = "Game Over. Press [enter] to play again.";
             }
+
             let text_size = measure_text(text, None, font_size as _, 1.0);
             draw_text(
                 text,
@@ -75,6 +76,7 @@ async fn main() {
                 font_size,
                 DARKGRAY,
             );
+
             if is_key_down(KeyCode::Enter) {
                 info!("Restarting game.");
                 ship = Ship::new();
@@ -85,12 +87,17 @@ async fn main() {
                     asteroids.push(Asteroid::new());
                 }
             }
+
+            if is_key_down(KeyCode::Escape) {
+                break;
+            }
             next_frame().await;
             continue;
         }
-        let frame_t = get_time();
 
+        let frame_t = get_time();
         ship.slow_down();
+
         if is_key_down(KeyCode::Up) {
             ship.accelerate();
         }
