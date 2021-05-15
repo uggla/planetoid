@@ -1,3 +1,4 @@
+use crate::collision::Collision;
 use crate::screen;
 use macroquad::prelude::*;
 pub struct Asteroid {
@@ -66,14 +67,6 @@ impl Asteroid {
         )
     }
 
-    pub fn pos(&self) -> Vec2 {
-        self.pos
-    }
-
-    pub fn size(&self) -> f32 {
-        self.size
-    }
-
     pub fn sides(&self) -> u8 {
         self.sides
     }
@@ -84,5 +77,15 @@ impl Asteroid {
 
     pub fn set_collided(&mut self, collided: bool) {
         self.collided = collided;
+    }
+}
+
+impl Collision for Asteroid {
+    fn pos(&self) -> Vec2 {
+        self.pos
+    }
+
+    fn size(&self) -> f32 {
+        self.size
     }
 }

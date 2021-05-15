@@ -1,9 +1,12 @@
+use crate::collision::Collision;
 use macroquad::prelude::*;
+
 pub struct Bullet {
     pos: Vec2,
     vel: Vec2,
     shot_at: f64,
     collided: bool,
+    size: f32,
 }
 
 impl Bullet {
@@ -13,6 +16,7 @@ impl Bullet {
             vel,
             shot_at,
             collided,
+            size: 2.,
         }
     }
 
@@ -28,10 +32,6 @@ impl Bullet {
         self.shot_at
     }
 
-    pub fn pos(&self) -> Vec2 {
-        self.pos
-    }
-
     pub fn set_collided(&mut self, collided: bool) {
         self.collided = collided;
     }
@@ -42,5 +42,15 @@ impl Bullet {
 
     pub fn vel(&self) -> Vec2 {
         self.vel
+    }
+}
+
+impl Collision for Bullet {
+    fn pos(&self) -> Vec2 {
+        self.pos
+    }
+
+    fn size(&self) -> f32 {
+        self.size
     }
 }

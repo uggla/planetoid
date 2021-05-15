@@ -1,10 +1,12 @@
 mod asteroid;
 mod bullet;
+mod collision;
 mod screen;
 mod ship;
-use crate::asteroid::Asteroid;
 use crate::bullet::Bullet;
+use crate::collision::Collision;
 use crate::ship::Ship;
+use crate::{asteroid::Asteroid, collision::is_collided};
 use macroquad::prelude::*;
 use std::thread;
 use tungstenite::{connect, Message};
@@ -88,9 +90,9 @@ async fn main() {
         }
         let frame_t = get_time();
 
-        let mut acc = -ship.vel() / 30.0;
+        ship.slow_down();
         if is_key_down(KeyCode::Up) {
-            acc = Vec2::new(ship.rotation().sin(), -ship.rotation().cos()) / 3.;
+            ship.accelerate();
         }
 
         if is_key_down(KeyCode::Space) && frame_t - last_shot > 0.1 {
@@ -103,6 +105,7 @@ async fn main() {
             ));
             last_shot = frame_t;
         }
+
         if is_key_down(KeyCode::Right) {
             ship.set_rot(ship.rot() + 5.);
         } else if is_key_down(KeyCode::Left) {
@@ -113,7 +116,7 @@ async fn main() {
             break;
         }
 
-        ship.update_pos(acc);
+        ship.update_pos();
 
         for bullet in bullets.iter_mut() {
             bullet.update_pos();
@@ -122,16 +125,14 @@ async fn main() {
             asteroid.update_pos();
         }
 
-        bullets.retain(|bullet| bullet.shot_at() + 1.5 > frame_t);
-
         let mut new_asteroids = Vec::new();
         for asteroid in asteroids.iter_mut() {
-            if (asteroid.pos() - ship.pos()).length() < asteroid.size() + Ship::HEIGHT / 3. {
+            if is_collided(asteroid, &ship) {
                 gameover = true;
                 break;
             }
             for bullet in bullets.iter_mut() {
-                if (asteroid.pos() - bullet.pos()).length() < asteroid.size() {
+                if is_collided(asteroid, bullet) {
                     asteroid.set_collided(true);
                     bullet.set_collided(true);
                     if asteroid.sides() > 4 {
@@ -154,10 +155,6 @@ async fn main() {
 
         if asteroids.len() == 0 {
             gameover = true;
-        }
-
-        if gameover {
-            continue;
         }
 
         clear_background(LIGHTGRAY);
