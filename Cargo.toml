@@ -1,0 +1,13 @@
+[package]
+name = "planetoid"
+version = "0.1.0"
+authors = ["Uggla <uggla@free.fr>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+macroquad = "0.3.3"
+tungstenite = '0.13.0'
+url = '2.2.2'
+env_logger = '0.8.3'
