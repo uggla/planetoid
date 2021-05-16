@@ -1,4 +1,4 @@
-use crate::collision::Collision;
+use crate::collision::Collided;
 use crate::screen;
 use macroquad::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -124,7 +124,7 @@ impl Asteroid {
     }
 }
 
-impl Collision for Asteroid {
+impl Collided for Asteroid {
     fn pos(&self) -> Vec2 {
         self.pos
     }

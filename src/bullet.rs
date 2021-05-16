@@ -1,4 +1,4 @@
-use crate::collision::Collision;
+use crate::collision::Collided;
 use macroquad::prelude::*;
 
 pub struct Bullet {
@@ -45,7 +45,7 @@ impl Bullet {
     }
 }
 
-impl Collision for Bullet {
+impl Collided for Bullet {
     fn pos(&self) -> Vec2 {
         self.pos
     }

@@ -4,7 +4,7 @@ mod collision;
 mod screen;
 mod ship;
 use crate::bullet::Bullet;
-use crate::collision::Collision;
+use crate::collision::Collided;
 use crate::ship::Ship;
 use crate::{asteroid::Asteroid, collision::is_collided};
 use macroquad::prelude::*;

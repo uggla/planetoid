@@ -1,4 +1,4 @@
-use crate::collision::Collision;
+use crate::collision::Collided;
 use crate::screen;
 use macroquad::prelude::*;
 
@@ -100,7 +100,7 @@ impl Ship {
     }
 }
 
-impl Collision for Ship {
+impl Collided for Ship {
     fn pos(&self) -> Vec2 {
         self.pos
     }
