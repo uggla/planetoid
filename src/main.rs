@@ -1,26 +1,28 @@
 mod asteroid;
 mod bullet;
 mod collision;
+#[cfg(not(target_arch = "wasm32"))]
+mod network;
 mod screen;
 mod ship;
-use crate::bullet::Bullet;
 use crate::collision::Collided;
+#[cfg(not(target_arch = "wasm32"))]
+use crate::network::connect_ws;
 use crate::ship::Ship;
 use crate::{asteroid::Asteroid, collision::is_collided};
+use crate::{asteroid::AsteroidsSerde, bullet::Bullet};
 use macroquad::prelude::*;
+use std::sync::mpsc;
 use std::thread;
 use structopt::StructOpt;
-use tungstenite::{connect, Message};
-use url::Url;
-
+#[cfg(not(target_arch = "wasm32"))]
+use tungstenite::Message;
+// use url::Url;
 #[derive(StructOpt, Debug)]
 #[structopt(name = "planetoid", version = "0.1.0")]
 /// Planetoid is a asteroid clone
 
 struct Opt {
-    // /// Verbose mode (-v, -vv, -vvv, etc.)
-    // #[structopt(short, long, parse(from_occurrences))]
-    // verbose: u8,
     /// Address
     #[structopt(short, long, default_value = "localhost")]
     address: String,
@@ -57,8 +59,10 @@ async fn main() {
     let mut bullets = Vec::new();
     let mut asteroids = Vec::new();
 
-    for _ in 0..10 {
-        asteroids.push(Asteroid::new());
+    if opt.mode == "host" {
+        for _ in 0..10 {
+            asteroids.push(Asteroid::new());
+        }
     }
 
     let mut asteroids_serde = Vec::new();
@@ -70,35 +74,75 @@ async fn main() {
 
     asteroids.clear();
     asteroids_serde.clear();
-    dbg!(&asteroids_serde);
-    asteroids_serde = serde_json::from_str(&&serialized).unwrap();
-    dbg!(&asteroids_serde);
+    asteroids_serde = serde_json::from_str(&serialized).unwrap();
+    // dbg!(&asteroids_serde);
     for asteroid in &asteroids_serde {
         asteroids.push(Asteroid::from_serde(asteroid));
     }
 
-    thread::spawn(|| {
-        let (mut socket, response) =
-            connect(Url::parse("ws://localhost:8080/chat/rust-ws").unwrap())
-                .expect("Can't connect");
+    #[cfg(not(target_arch = "wasm32"))]
+    let (tx_from_socket, rx_from_socket) = mpsc::channel();
+    #[cfg(not(target_arch = "wasm32"))]
+    let (tx_to_socket, rx_to_socket) = mpsc::channel();
 
-        println!("Connected to the server");
-        println!("Response HTTP code: {}", response.status());
-        println!("Response contains the following headers:");
-        for (ref header, _value) in response.headers() {
-            println!("* {}", header);
-        }
-
-        socket
-            .write_message(Message::Text("Hello WebSocket".into()))
-            .unwrap();
+    #[cfg(not(target_arch = "wasm32"))]
+    thread::spawn(move || {
+        let (mut socket, _response) = connect_ws().unwrap();
         loop {
+            // let _received = match rx_to_socket.try_recv() {
+            //     Ok(msg) => socket
+            //         .write_message(Message::Text(msg))
+            //         .expect("Cannot write to socket."),
+            //     Err(mpsc::TryRecvError::Empty) => (),
+            //     Err(mpsc::TryRecvError::Disconnected) => panic!("Disconnected"),
+            // };
+            let received = rx_to_socket.recv().unwrap();
+            socket
+                .write_message(Message::Text(received))
+                .expect("Cannot write to socket.");
+
             let msg = socket.read_message().expect("Error reading message");
-            println!("Received: {}", msg);
+            // println!("Received: {}", msg);
+            tx_from_socket.send(msg).unwrap();
         }
     });
 
+    let mut frame_count: u32 = 0;
     loop {
+        #[cfg(not(target_arch = "wasm32"))]
+        let _received = match rx_from_socket.try_recv() {
+            Ok(msg) => {
+                println!("{}", msg.to_string());
+
+                if let Message::Text(msg) = msg {
+                    if !msg.contains("joined") {
+                        let msg = msg.strip_prefix(">> rust-ws: ").unwrap().to_string();
+                        println!("{}", msg.to_string());
+
+                        asteroids.clear();
+                        let asteroids_serde: AsteroidsSerde = serde_json::from_str(&msg).unwrap();
+                        // for asteroid in asteroids_serde.asteroids {
+                        //     asteroids.push(Asteroid::from_serde(&asteroid));
+                        // }
+                    }
+                }
+            }
+            Err(mpsc::TryRecvError::Empty) => (),
+            Err(mpsc::TryRecvError::Disconnected) => panic!("Disconnected"),
+        };
+
+        if frame_count > 4 {
+            if opt.mode == "host" {
+                let mut asteroids_serde = Vec::new();
+                for asteroid in &asteroids {
+                    asteroids_serde.push(asteroid.to_serde());
+                }
+                let serialized = serde_json::to_string(&asteroids_serde).unwrap();
+                tx_to_socket.send(serialized).unwrap();
+            }
+            frame_count = 0;
+        }
+
         if gameover {
             clear_background(LIGHTGRAY);
             let mut text = "You Win!. Press [enter] to play again.";
@@ -216,6 +260,7 @@ async fn main() {
         ship.draw();
 
         //println!("{} fps", get_fps());
-        next_frame().await
+        next_frame().await;
+        frame_count += 1;
     }
 }

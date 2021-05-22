@@ -15,7 +15,7 @@ pub struct AsteroidSerde {
 }
 #[derive(Serialize, Deserialize, Debug)]
 pub struct AsteroidsSerde {
-    asteroids: Vec<AsteroidsSerde>,
+    pub asteroids: Vec<AsteroidSerde>,
 }
 
 pub struct Asteroid {
