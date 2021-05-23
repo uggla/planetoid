@@ -5,12 +5,12 @@ mod collision;
 mod network;
 mod screen;
 mod ship;
+use crate::bullet::Bullet;
+use crate::collision::Collided;
 #[cfg(not(target_arch = "wasm32"))]
-use crate::network::connect_ws;
+use crate::network::{connect_ws, deserialize_host_data, serialize_host_data};
 use crate::ship::Ship;
 use crate::{asteroid::Asteroid, collision::is_collided};
-use crate::{bullet::Bullet, network::serialize_host_data};
-use crate::{collision::Collided, network::deserialize_host_data};
 use macroquad::prelude::*;
 use std::sync::mpsc;
 use std::thread;
@@ -135,6 +135,7 @@ async fn main() {
 
         if frame_count > 4 {
             if opt.mode == "host" {
+                #[cfg(not(target_arch = "wasm32"))]
                 tx_to_socket
                     .send(serialize_host_data(&mut asteroids))
                     .unwrap();
