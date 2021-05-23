@@ -13,10 +13,9 @@ pub fn wrap_around(pos: &Vec2) -> Vec2 {
     if wrapped_pos.y < 0. {
         wrapped_pos.y = screen_height()
     }
-    return wrapped_pos;
+    wrapped_pos
 }
 
 pub fn center() -> Vec2 {
-    let screen_center = Vec2::new(screen_width() / 2., screen_height() / 2.);
-    screen_center
+    Vec2::new(screen_width() / 2., screen_height() / 2.)
 }

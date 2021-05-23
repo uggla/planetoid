@@ -99,7 +99,7 @@ impl Asteroid {
     pub fn to_serde(&self) -> AsteroidSerde {
         let pos_t: (f32, f32) = self.pos.into();
         let vel_t: (f32, f32) = self.vel.into();
-        let asteroid = AsteroidSerde {
+        AsteroidSerde {
             pos: pos_t,
             vel: vel_t,
             rot: self.rot,
@@ -107,8 +107,7 @@ impl Asteroid {
             size: self.size,
             sides: self.sides,
             collided: self.collided,
-        };
-        asteroid
+        }
     }
 
     pub fn from_serde(asteroid: &AsteroidSerde) -> Self {
