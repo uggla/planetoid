@@ -22,13 +22,9 @@ use tungstenite::Message;
 /// Planetoid is a asteroid clone
 
 struct Opt {
-    /// Address
+    /// Url
     #[structopt(short, long, default_value = "ws://localhost:8080/chat/planetoid_host")]
-    address: String,
-
-    /// Port
-    #[structopt(short, long, default_value = "8080")]
-    port: u16,
+    url: String,
 
     /// Network mode
     #[structopt(short, long, default_value = "host", possible_values = &["host","guest","spectator"])]
@@ -84,7 +80,7 @@ async fn main() {
     #[cfg(not(target_arch = "wasm32"))]
     let (tx_to_socket, rx_to_socket) = mpsc::channel();
 
-    let url = opt.address.clone();
+    let url = opt.url.clone();
     let mode = opt.mode.clone();
 
     #[cfg(not(target_arch = "wasm32"))]
