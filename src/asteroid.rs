@@ -13,10 +13,10 @@ pub struct AsteroidSerde {
     sides: u8,
     collided: bool,
 }
-#[derive(Serialize, Deserialize, Debug)]
-pub struct AsteroidsSerde {
-    pub asteroids: Vec<AsteroidSerde>,
-}
+// #[derive(Serialize, Deserialize, Debug)]
+// pub struct AsteroidsSerde {
+//     pub asteroids: Vec<AsteroidSerde>,
+// }
 
 pub struct Asteroid {
     pos: Vec2,
