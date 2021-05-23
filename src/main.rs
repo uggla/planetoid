@@ -47,6 +47,7 @@ async fn main() {
     let opt = Opt::from_args();
     println!("{:#?}", opt);
     info!("Starting game.");
+    const MAX_ASTEROIDS: u8 = 2;
     let mut gameover = false;
     let mut last_shot = get_time();
     let mut ship = Ship::new();
@@ -55,7 +56,7 @@ async fn main() {
     let mut asteroids = Vec::new();
 
     if opt.mode == "host" {
-        for _ in 0..2 {
+        for _ in 0..MAX_ASTEROIDS {
             asteroids.push(Asteroid::new());
         }
     }
@@ -161,7 +162,7 @@ async fn main() {
                 bullets = Vec::new();
                 asteroids = Vec::new();
                 gameover = false;
-                for _ in 0..10 {
+                for _ in 0..MAX_ASTEROIDS {
                     asteroids.push(Asteroid::new());
                 }
                 frame_count = 0;
