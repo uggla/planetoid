@@ -5,12 +5,12 @@ mod collision;
 mod network;
 mod screen;
 mod ship;
-use crate::collision::Collided;
 #[cfg(not(target_arch = "wasm32"))]
 use crate::network::connect_ws;
 use crate::ship::Ship;
 use crate::{asteroid::Asteroid, collision::is_collided};
-use crate::{asteroid::AsteroidSerde, bullet::Bullet};
+use crate::{bullet::Bullet, network::serialize_host_data};
+use crate::{collision::Collided, network::deserialize_host_data};
 use macroquad::prelude::*;
 use std::sync::mpsc;
 use std::thread;
@@ -105,51 +105,28 @@ async fn main() {
                     .expect("Cannot write to socket.");
             }
             let msg = socket.read_message().expect("Error reading message");
-            // println!("Received: {}", msg);
             tx_from_socket.send(msg).unwrap();
         }
     });
 
-    // if opt.mode == "guest" {
-    //     let received = rx_from_socket.recv().unwrap();
-    //     if let Message::Text(msg) = received {
-    //         // Uggly hack to manage msg
-    //         if !msg.contains("joined") {
-    //             let msg = msg.strip_prefix(">> rust-ws: ").unwrap().to_string();
-    //             println!("{}", msg.to_string());
-
-    //             let asteroids_serde: Vec<AsteroidSerde> = serde_json::from_str(&msg).unwrap();
-
-    //             asteroids.clear();
-    //             for asteroid in asteroids_serde {
-    //                 asteroids.push(Asteroid::from_serde(&asteroid));
-    //             }
-    //         }
-    //     }
-    // }
+    #[cfg(not(target_arch = "wasm32"))]
+    if opt.mode != "host" {
+        println!("Waiting synchronization data");
+        loop {
+            let msg = rx_from_socket.recv().unwrap();
+            deserialize_host_data(&opt.mode, msg, &mut asteroids);
+            if !asteroids.is_empty() {
+                break;
+            }
+        }
+    }
 
     let mut frame_count: u32 = 0;
     loop {
         #[cfg(not(target_arch = "wasm32"))]
         let _received = match rx_from_socket.try_recv() {
             Ok(msg) => {
-                if let Message::Text(msg) = msg {
-                    // Uggly hack to manage msg
-                    if !msg.contains("joined") && !msg.contains("guest") {
-                        // let msg = msg.strip_prefix(">>  : ").unwrap().to_string();
-                        println!("{}", msg.to_string());
-
-                        if opt.mode != "host" {
-                            let asteroids_serde: Vec<AsteroidSerde> =
-                                serde_json::from_str(&msg).unwrap();
-
-                            asteroids.clear();
-                            for asteroid in asteroids_serde {
-                                asteroids.push(Asteroid::from_serde(&asteroid));
-                            }
-                        }
-                    }
-                }
+                deserialize_host_data(&opt.mode, msg, &mut asteroids);
             }
             Err(mpsc::TryRecvError::Empty) => (),
             Err(mpsc::TryRecvError::Disconnected) => panic!("Disconnected"),
@@ -157,14 +134,9 @@ async fn main() {
 
         if frame_count > 4 {
             if opt.mode == "host" {
-                let mut asteroids_serde = Vec::new();
-                for asteroid in &asteroids {
-                    asteroids_serde.push(asteroid.to_serde());
-                }
-                let serialized = serde_json::to_string(&asteroids_serde).unwrap();
-                tx_to_socket.send(serialized).unwrap();
-            } else {
-                // tx_to_socket.send("guest".to_string()).unwrap();
+                tx_to_socket
+                    .send(serialize_host_data(&mut asteroids))
+                    .unwrap();
             }
             frame_count = 0;
         }
