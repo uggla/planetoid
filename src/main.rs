@@ -26,6 +26,10 @@ struct Opt {
     #[structopt(short, long, default_value = "ws://localhost:8080/chat/planetoid_host")]
     url: String,
 
+    /// God mode
+    #[structopt(short, long)]
+    god: bool,
+
     /// Network mode
     #[structopt(short, long, default_value = "host", possible_values = &["host","guest","spectator"])]
     mode: String,
@@ -214,7 +218,7 @@ async fn main() {
 
         let mut new_asteroids = Vec::new();
         for asteroid in asteroids.iter_mut() {
-            if is_collided(asteroid, &ship) && opt.mode != "spectator" {
+            if is_collided(asteroid, &ship) && (opt.mode != "spectator" && !opt.god) {
                 gameover = true;
                 break;
             }
