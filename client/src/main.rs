@@ -23,7 +23,7 @@ use tungstenite::Message;
 
 struct Opt {
     /// Url
-    #[structopt(short, long, default_value = "ws://localhost:8080/chat/planetoid_host")]
+    #[structopt(short, long, default_value = "ws://localhost:8080/gamedata/planetoid_host")]
     url: String,
 
     /// God mode

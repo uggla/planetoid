@@ -14,7 +14,7 @@ import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
 import javax.websocket.Session;
 
-@ServerEndpoint("/chat/{username}")
+@ServerEndpoint("/gamedata/{username}")
 @ApplicationScoped
 public class ChatSocket {
 
