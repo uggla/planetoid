@@ -47,7 +47,7 @@ Running the wasm application into Firefox:
 
 ### Server
 
-1. Install OpenJDK 11 following the instructions [hehe](https://adoptopenjdk.net/installation.html#) or install it using your distribution package manager.
+1. Install OpenJDK 11 following the instructions [here](https://adoptopenjdk.net/installation.html#) or install it using your distribution package manager.
 Ex on Fedora
 
 ```bash
@@ -72,7 +72,7 @@ mvn compile quarkus:dev
 ### Client
 
 #### Native client
-1. Install Rust following the instructions [hehe](https://www.rust-lang.org/fr/learn/get-started).
+1. Install Rust following the instructions [here](https://www.rust-lang.org/fr/learn/get-started).
    
    *Tips: the rustup method is the simplest method.*
 
