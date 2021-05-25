@@ -51,7 +51,7 @@ async fn main() {
     let opt = Opt::from_args();
     println!("{:#?}", opt);
     info!("Starting game.");
-    const MAX_ASTEROIDS: u8 = 2;
+    const MAX_ASTEROIDS: u8 = 10;
     let mut gameover = false;
     let mut last_shot = get_time();
     let mut ship = Ship::new();
