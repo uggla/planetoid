@@ -46,7 +46,7 @@ impl Asteroid {
     pub fn new_split(pos: Vec2, velx: f32, vely: f32, size: f32, sides: u8) -> Vec<Asteroid> {
         let mut new_asteroids = Vec::new();
 
-        let asteriod1 = Self {
+        let asteroid1 = Self {
             pos,
             vel: Vec2::new(vely, -velx).normalize() * rand::gen_range(1., 3.),
             rot: rand::gen_range(0., 360.),
@@ -56,7 +56,7 @@ impl Asteroid {
             collided: false,
         };
 
-        let asteriod2 = Self {
+        let asteroid2 = Self {
             pos,
             vel: Vec2::new(-vely, velx).normalize(),
             rot: rand::gen_range(0., 360.),
@@ -66,8 +66,8 @@ impl Asteroid {
             collided: false,
         };
 
-        new_asteroids.push(asteriod1);
-        new_asteroids.push(asteriod2);
+        new_asteroids.push(asteroid1);
+        new_asteroids.push(asteroid2);
         new_asteroids
     }
 
@@ -304,7 +304,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn asteriod_serialize_deserialize_test() {
+    fn asteroid_serialize_deserialize_test() {
         let asteroid = Asteroid {
             pos: Vec2::new(1., 1.),
             vel: Vec2::new(2., 2.),

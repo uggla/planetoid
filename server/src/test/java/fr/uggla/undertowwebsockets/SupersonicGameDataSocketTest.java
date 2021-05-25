@@ -21,16 +21,16 @@ public class SupersonicChatSocketTest {
 
     private static final LinkedBlockingDeque<String> MESSAGES = new LinkedBlockingDeque<>();
 
-    @TestHTTPResource("/chat/stu")
+    @TestHTTPResource("/gamedata/planetoid_host")
     URI uri;
 
     @Test
-    public void testWebsocketChat() throws Exception {
+    public void testWebsocketGameData() throws Exception {
         try (Session session = ContainerProvider.getWebSocketContainer().connectToServer(Client.class, uri)) {
             Assertions.assertEquals("CONNECT", MESSAGES.poll(10, TimeUnit.SECONDS));
-            Assertions.assertEquals("User stu joined", MESSAGES.poll(10, TimeUnit.SECONDS));
+            Assertions.assertEquals("User planetoid_host joined", MESSAGES.poll(10, TimeUnit.SECONDS));
             session.getAsyncRemote().sendText("hello world");
-            Assertions.assertEquals(">> stu: hello world", MESSAGES.poll(10, TimeUnit.SECONDS));
+            Assertions.assertEquals("hello world", MESSAGES.poll(10, TimeUnit.SECONDS));
         }
     }
 
