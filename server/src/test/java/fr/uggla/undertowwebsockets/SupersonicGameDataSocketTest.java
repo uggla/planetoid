@@ -29,6 +29,7 @@ public class SupersonicGameDataSocketTest {
         try (Session session = ContainerProvider.getWebSocketContainer().connectToServer(Client.class, uri)) {
             Assertions.assertEquals("CONNECT", MESSAGES.poll(10, TimeUnit.SECONDS));
             Assertions.assertEquals("User planetoid_host joined", MESSAGES.poll(10, TimeUnit.SECONDS));
+            Assertions.assertEquals("_ready_", MESSAGES.poll(10, TimeUnit.SECONDS));
             session.getAsyncRemote().sendText("hello world");
             Assertions.assertEquals("hello world", MESSAGES.poll(10, TimeUnit.SECONDS));
         }

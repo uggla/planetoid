@@ -15,7 +15,7 @@ public class PlanetoidTest {
           .when().get("/hello")
           .then()
              .statusCode(200)
-             .body(is("Hello RESTEasy"));
+             .body(is("Hello this is Planetoid !"));
     }
 
 }
