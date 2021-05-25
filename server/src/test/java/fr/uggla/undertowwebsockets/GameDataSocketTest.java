@@ -17,7 +17,7 @@ import io.quarkus.test.common.http.TestHTTPResource;
 import io.quarkus.test.junit.QuarkusTest;
 
 @QuarkusTest
-public class SupersonicGameDataSocketTest {
+public class GameDataSocketTest {
 
     private static final LinkedBlockingDeque<String> MESSAGES = new LinkedBlockingDeque<>();
 
