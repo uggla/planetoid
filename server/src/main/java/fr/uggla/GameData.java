@@ -16,7 +16,7 @@ import javax.websocket.Session;
 
 @ServerEndpoint("/gamedata/{username}")
 @ApplicationScoped
-public class ChatSocket {
+public class GameData {
 
     Map<String, Session> sessions = new ConcurrentHashMap<>();
 
