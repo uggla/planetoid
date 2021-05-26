@@ -192,6 +192,18 @@ impl<'de> Deserialize<'de> for Bullet {
     }
 }
 
+impl Clone for Bullet {
+    fn clone(&self) -> Self {
+        Self {
+            pos: self.pos,
+            vel: self.vel,
+            shot_at: self.shot_at,
+            size: self.size,
+            collided: self.collided,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
