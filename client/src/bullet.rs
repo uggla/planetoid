@@ -64,7 +64,7 @@ impl Serialize for Bullet {
     where
         S: Serializer,
     {
-        let mut state = serializer.serialize_struct("Bullet", 7)?;
+        let mut state = serializer.serialize_struct("Bullet", 5)?;
         state.serialize_field("pos", &vec![&self.pos[0], &self.pos[1]])?;
         state.serialize_field("vel", &vec![&self.vel[0], &self.vel[1]])?;
         state.serialize_field("shot_at", &self.shot_at)?;
