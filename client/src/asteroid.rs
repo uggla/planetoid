@@ -262,6 +262,20 @@ impl<'de> Deserialize<'de> for Asteroid {
     }
 }
 
+impl Clone for Asteroid {
+    fn clone(&self) -> Self {
+        Self {
+            pos: self.pos,
+            vel: self.vel,
+            rot: self.rot,
+            rot_speed: self.rot_speed,
+            size: self.size,
+            sides: self.sides,
+            collided: self.collided,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
