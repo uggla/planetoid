@@ -1,12 +1,16 @@
 use crate::collision::Collided;
 use crate::screen;
 use macroquad::prelude::*;
+use serde::de::{self, Deserializer, MapAccess, Visitor};
+use serde::ser::{SerializeStruct, Serializer};
+use serde::{Deserialize, Serialize};
+use std::fmt;
 
 pub struct Ship {
     pos: Vec2,
-    rot: f32,
     vel: Vec2,
     acc: Vec2,
+    rot: f32,
     size: f32,
 }
 
@@ -107,5 +111,165 @@ impl Collided for Ship {
 
     fn size(&self) -> f32 {
         self.size
+    }
+}
+
+impl Serialize for Ship {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_struct("Ship", 5)?;
+        state.serialize_field("pos", &vec![&self.pos[0], &self.pos[1]])?;
+        state.serialize_field("vel", &vec![&self.vel[0], &self.vel[1]])?;
+        state.serialize_field("acc", &vec![&self.acc[0], &self.acc[1]])?;
+        state.serialize_field("rot", &self.rot)?;
+        state.serialize_field("size", &self.size)?;
+        state.end()
+    }
+}
+
+impl<'de> Deserialize<'de> for Ship {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        enum Field {
+            Pos,
+            Vel,
+            Acc,
+            Rot,
+            Size,
+        }
+
+        impl<'de> Deserialize<'de> for Field {
+            fn deserialize<D>(deserializer: D) -> Result<Field, D::Error>
+            where
+                D: Deserializer<'de>,
+            {
+                struct FieldVisitor;
+
+                impl<'de> Visitor<'de> for FieldVisitor {
+                    type Value = Field;
+
+                    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                        formatter.write_str("`pos`, `vel`, `acc`, `rot` or `size`")
+                    }
+
+                    fn visit_str<E>(self, value: &str) -> Result<Field, E>
+                    where
+                        E: de::Error,
+                    {
+                        match value {
+                            "pos" => Ok(Field::Pos),
+                            "vel" => Ok(Field::Vel),
+                            "acc" => Ok(Field::Acc),
+                            "rot" => Ok(Field::Rot),
+                            "size" => Ok(Field::Size),
+                            _ => Err(de::Error::unknown_field(value, FIELDS)),
+                        }
+                    }
+                }
+
+                deserializer.deserialize_identifier(FieldVisitor)
+            }
+        }
+
+        struct ShipVisitor;
+
+        impl<'de> Visitor<'de> for ShipVisitor {
+            type Value = Ship;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                formatter.write_str("struct Ship")
+            }
+
+            fn visit_map<V>(self, mut map: V) -> Result<Ship, V::Error>
+            where
+                V: MapAccess<'de>,
+            {
+                let mut pos: Option<Vec<f32>> = None;
+                let mut vel: Option<Vec<f32>> = None;
+                let mut acc: Option<Vec<f32>> = None;
+                let mut rot = None;
+                let mut size = None;
+                while let Some(key) = map.next_key()? {
+                    match key {
+                        Field::Pos => {
+                            if pos.is_some() {
+                                return Err(de::Error::duplicate_field("pos"));
+                            }
+                            pos = Some(map.next_value()?);
+                        }
+                        Field::Vel => {
+                            if vel.is_some() {
+                                return Err(de::Error::duplicate_field("vel"));
+                            }
+                            vel = Some(map.next_value()?);
+                        }
+                        Field::Acc => {
+                            if acc.is_some() {
+                                return Err(de::Error::duplicate_field("vel"));
+                            }
+                            acc = Some(map.next_value()?);
+                        }
+                        Field::Rot => {
+                            if rot.is_some() {
+                                return Err(de::Error::duplicate_field("rot"));
+                            }
+                            rot = Some(map.next_value()?);
+                        }
+                        Field::Size => {
+                            if size.is_some() {
+                                return Err(de::Error::duplicate_field("size"));
+                            }
+                            size = Some(map.next_value()?);
+                        }
+                    }
+                }
+                let pos = pos.ok_or_else(|| de::Error::missing_field("pos"))?;
+                let vel = vel.ok_or_else(|| de::Error::missing_field("vel"))?;
+                let acc = acc.ok_or_else(|| de::Error::missing_field("acc"))?;
+                let rot = rot.ok_or_else(|| de::Error::missing_field("rot"))?;
+                let size = size.ok_or_else(|| de::Error::missing_field("size"))?;
+                Ok(Ship {
+                    pos: Vec2::new(pos[0], pos[1]),
+                    vel: Vec2::new(vel[0], vel[1]),
+                    acc: Vec2::new(acc[0], acc[1]),
+                    rot,
+                    size,
+                })
+            }
+        }
+
+        const FIELDS: &[&str] = &["pos", "vel", "acc", "rot", "size"];
+        deserializer.deserialize_struct("Ship", FIELDS, ShipVisitor)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn ship_serialize_deserialize_test() {
+        let ship = Ship {
+            pos: Vec2::new(1., 1.),
+            vel: Vec2::new(2., 2.),
+            acc: Vec2::new(3., 3.),
+            rot: 1.,
+            size: 1.,
+        };
+        let serialize = serde_json::to_string(&ship).unwrap();
+        dbg!(&serialize);
+        let deserialize: Ship = serde_json::from_str(&serialize).unwrap();
+        let serialize2 = serde_json::to_string(&deserialize).unwrap();
+        dbg!(&serialize2);
+        assert_eq!(serialize, serialize2);
+        assert_eq!(ship.pos, deserialize.pos);
+        assert_eq!(ship.vel, deserialize.vel);
+        assert_eq!(ship.acc, deserialize.acc);
+        assert_eq!(ship.rot, deserialize.rot);
+        assert_eq!(ship.size, deserialize.size);
     }
 }
