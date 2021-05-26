@@ -6,17 +6,6 @@ use serde::ser::{SerializeStruct, Serializer};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct AsteroidSerde {
-    pos: (f32, f32),
-    vel: (f32, f32),
-    rot: f32,
-    rot_speed: f32,
-    size: f32,
-    sides: u8,
-    collided: bool,
-}
-
 pub struct Asteroid {
     pos: Vec2,
     vel: Vec2,
@@ -93,32 +82,6 @@ impl Asteroid {
 
     pub fn set_collided(&mut self, collided: bool) {
         self.collided = collided;
-    }
-
-    pub fn to_serde(&self) -> AsteroidSerde {
-        let pos_t: (f32, f32) = self.pos.into();
-        let vel_t: (f32, f32) = self.vel.into();
-        AsteroidSerde {
-            pos: pos_t,
-            vel: vel_t,
-            rot: self.rot,
-            rot_speed: self.rot_speed,
-            size: self.size,
-            sides: self.sides,
-            collided: self.collided,
-        }
-    }
-
-    pub fn from_serde(asteroid: &AsteroidSerde) -> Self {
-        Self {
-            pos: Vec2::from(asteroid.pos),
-            vel: Vec2::from(asteroid.vel),
-            rot: asteroid.rot,
-            rot_speed: asteroid.rot_speed,
-            size: asteroid.size,
-            sides: asteroid.sides,
-            collided: asteroid.collided,
-        }
     }
 }
 
