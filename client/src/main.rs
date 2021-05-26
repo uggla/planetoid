@@ -23,7 +23,11 @@ use tungstenite::Message;
 
 struct Opt {
     /// Url
-    #[structopt(short, long, default_value = "ws://localhost:8080/gamedata/planetoid_host")]
+    #[structopt(
+        short,
+        long,
+        default_value = "ws://localhost:8080/gamedata/planetoid_host"
+    )]
     url: String,
 
     /// God mode
@@ -115,7 +119,7 @@ async fn main() {
         println!("Waiting synchronization data");
         loop {
             let msg = rx_from_socket.recv().unwrap();
-            deserialize_host_data(&opt.mode, msg, &mut asteroids);
+            deserialize_host_data(&opt.mode, msg, &mut asteroids, &mut bullets);
             if !asteroids.is_empty() {
                 break;
             }
@@ -127,7 +131,7 @@ async fn main() {
         #[cfg(not(target_arch = "wasm32"))]
         let _received = match rx_from_socket.try_recv() {
             Ok(msg) => {
-                deserialize_host_data(&opt.mode, msg, &mut asteroids);
+                deserialize_host_data(&opt.mode, msg, &mut asteroids, &mut bullets);
             }
             Err(mpsc::TryRecvError::Empty) => (),
             Err(mpsc::TryRecvError::Disconnected) => panic!("Disconnected"),
@@ -137,7 +141,7 @@ async fn main() {
             if opt.mode == "host" {
                 #[cfg(not(target_arch = "wasm32"))]
                 tx_to_socket
-                    .send(serialize_host_data(&mut asteroids))
+                    .send(serialize_host_data(&mut asteroids, &mut bullets))
                     .unwrap();
             }
             frame_count = 0;
