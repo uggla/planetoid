@@ -22,9 +22,9 @@ impl Ship {
     pub fn new() -> Self {
         Self {
             pos: screen::center(),
-            rot: 0.,
             vel: Vec2::new(0., 0.),
             acc: Vec2::new(0., 0.),
+            rot: 0.,
             size: Ship::HEIGHT / 3.,
         }
     }
@@ -244,6 +244,18 @@ impl<'de> Deserialize<'de> for Ship {
 
         const FIELDS: &[&str] = &["pos", "vel", "acc", "rot", "size"];
         deserializer.deserialize_struct("Ship", FIELDS, ShipVisitor)
+    }
+}
+
+impl Clone for Ship {
+    fn clone(&self) -> Self {
+        Self {
+            pos: self.pos,
+            vel: self.vel,
+            acc: self.acc,
+            rot: self.rot,
+            size: self.size,
+        }
     }
 }
 
