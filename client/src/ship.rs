@@ -1,5 +1,5 @@
-use crate::collision::Collided;
 use crate::screen;
+use crate::{bullet::Bullet, collision::Collided};
 use macroquad::prelude::*;
 use serde::de::{self, Deserializer, MapAccess, Visitor};
 use serde::ser::{SerializeStruct, Serializer};
@@ -12,6 +12,7 @@ pub struct Ship {
     acc: Vec2,
     rot: f32,
     size: f32,
+    bullets: Vec<Bullet>,
 }
 
 impl Ship {
@@ -26,6 +27,7 @@ impl Ship {
             acc: Vec2::new(0., 0.),
             rot: 0.,
             size: Ship::HEIGHT / 3.,
+            bullets: Vec::new(),
         }
     }
 
@@ -125,6 +127,7 @@ impl Serialize for Ship {
         state.serialize_field("acc", &vec![&self.acc[0], &self.acc[1]])?;
         state.serialize_field("rot", &self.rot)?;
         state.serialize_field("size", &self.size)?;
+        state.serialize_field("bullets", &self.bullets)?;
         state.end()
     }
 }
@@ -140,6 +143,7 @@ impl<'de> Deserialize<'de> for Ship {
             Acc,
             Rot,
             Size,
+            Bullets,
         }
 
         impl<'de> Deserialize<'de> for Field {
@@ -153,7 +157,7 @@ impl<'de> Deserialize<'de> for Ship {
                     type Value = Field;
 
                     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-                        formatter.write_str("`pos`, `vel`, `acc`, `rot` or `size`")
+                        formatter.write_str("`pos`, `vel`, `acc`, `rot`, `size` or `bullets`")
                     }
 
                     fn visit_str<E>(self, value: &str) -> Result<Field, E>
@@ -166,6 +170,7 @@ impl<'de> Deserialize<'de> for Ship {
                             "acc" => Ok(Field::Acc),
                             "rot" => Ok(Field::Rot),
                             "size" => Ok(Field::Size),
+                            "bullets" => Ok(Field::Bullets),
                             _ => Err(de::Error::unknown_field(value, FIELDS)),
                         }
                     }
@@ -193,6 +198,7 @@ impl<'de> Deserialize<'de> for Ship {
                 let mut acc: Option<Vec<f32>> = None;
                 let mut rot = None;
                 let mut size = None;
+                let mut bullets: Option<Vec<Bullet>> = None;
                 while let Some(key) = map.next_key()? {
                     match key {
                         Field::Pos => {
@@ -225,6 +231,12 @@ impl<'de> Deserialize<'de> for Ship {
                             }
                             size = Some(map.next_value()?);
                         }
+                        Field::Bullets => {
+                            if bullets.is_some() {
+                                return Err(de::Error::duplicate_field("bullets"));
+                            }
+                            bullets = Some(map.next_value()?);
+                        }
                     }
                 }
                 let pos = pos.ok_or_else(|| de::Error::missing_field("pos"))?;
@@ -232,17 +244,19 @@ impl<'de> Deserialize<'de> for Ship {
                 let acc = acc.ok_or_else(|| de::Error::missing_field("acc"))?;
                 let rot = rot.ok_or_else(|| de::Error::missing_field("rot"))?;
                 let size = size.ok_or_else(|| de::Error::missing_field("size"))?;
+                let bullets = bullets.ok_or_else(|| de::Error::missing_field("bullets"))?;
                 Ok(Ship {
                     pos: Vec2::new(pos[0], pos[1]),
                     vel: Vec2::new(vel[0], vel[1]),
                     acc: Vec2::new(acc[0], acc[1]),
                     rot,
                     size,
+                    bullets,
                 })
             }
         }
 
-        const FIELDS: &[&str] = &["pos", "vel", "acc", "rot", "size"];
+        const FIELDS: &[&str] = &["pos", "vel", "acc", "rot", "size", "bullets"];
         deserializer.deserialize_struct("Ship", FIELDS, ShipVisitor)
     }
 }
@@ -255,6 +269,7 @@ impl Clone for Ship {
             acc: self.acc,
             rot: self.rot,
             size: self.size,
+            bullets: self.bullets.clone(),
         }
     }
 }
@@ -265,23 +280,76 @@ mod tests {
 
     #[test]
     fn ship_serialize_deserialize_test() {
+        let mut bullets: Vec<Bullet> = Vec::new();
+
+        let bullet = Bullet::new(Vec2::new(1., 1.), Vec2::new(2., 2.), 5., false);
+        bullets.push(bullet);
+
+        let bullet2 = Bullet::new(Vec2::new(2., 1.), Vec2::new(3., 2.), 6., true);
+        bullets.push(bullet2);
+
         let ship = Ship {
             pos: Vec2::new(1., 1.),
             vel: Vec2::new(2., 2.),
             acc: Vec2::new(3., 3.),
             rot: 1.,
             size: 1.,
+            bullets: bullets,
         };
         let serialize = serde_json::to_string(&ship).unwrap();
         dbg!(&serialize);
         let deserialize: Ship = serde_json::from_str(&serialize).unwrap();
         let serialize2 = serde_json::to_string(&deserialize).unwrap();
-        dbg!(&serialize2);
         assert_eq!(serialize, serialize2);
         assert_eq!(ship.pos, deserialize.pos);
         assert_eq!(ship.vel, deserialize.vel);
         assert_eq!(ship.acc, deserialize.acc);
         assert_eq!(ship.rot, deserialize.rot);
         assert_eq!(ship.size, deserialize.size);
+        assert_eq!(ship.bullets[0].pos(), deserialize.bullets[0].pos());
+        assert_eq!(ship.bullets[0].vel(), deserialize.bullets[0].vel());
+        assert_eq!(ship.bullets[0].shot_at(), deserialize.bullets[0].shot_at());
+        assert_eq!(ship.bullets[0].size(), deserialize.bullets[0].size());
+        assert_eq!(
+            ship.bullets[0].collided(),
+            deserialize.bullets[0].collided()
+        );
+        assert_eq!(ship.bullets[1].pos(), deserialize.bullets[1].pos());
+        assert_eq!(ship.bullets[1].vel(), deserialize.bullets[1].vel());
+        assert_eq!(ship.bullets[1].shot_at(), deserialize.bullets[1].shot_at());
+        assert_eq!(ship.bullets[1].size(), deserialize.bullets[1].size());
+        assert_eq!(
+            ship.bullets[1].collided(),
+            deserialize.bullets[1].collided()
+        );
+    }
+
+    #[test]
+    fn ship_clone_test() {
+        let mut bullets: Vec<Bullet> = Vec::new();
+
+        let bullet = Bullet::new(Vec2::new(1., 1.), Vec2::new(2., 2.), 5., false);
+        bullets.push(bullet);
+
+        let ship = Ship {
+            pos: Vec2::new(1., 1.),
+            vel: Vec2::new(2., 2.),
+            acc: Vec2::new(3., 3.),
+            rot: 1.,
+            size: 1.,
+            bullets: bullets,
+        };
+
+        let ship_clone = ship.clone();
+
+        assert_eq!(ship.pos, ship_clone.pos);
+        assert_eq!(ship.vel, ship_clone.vel);
+        assert_eq!(ship.acc, ship_clone.acc);
+        assert_eq!(ship.rot, ship_clone.rot);
+        assert_eq!(ship.size, ship_clone.size);
+        assert_eq!(ship.bullets[0].pos(), ship_clone.bullets[0].pos());
+        assert_eq!(ship.bullets[0].vel(), ship_clone.bullets[0].vel());
+        assert_eq!(ship.bullets[0].shot_at(), ship_clone.bullets[0].shot_at());
+        assert_eq!(ship.bullets[0].size(), ship_clone.bullets[0].size());
     }
 }
