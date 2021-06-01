@@ -8,8 +8,8 @@ use url::Url;
 pub fn connect_ws(url: &str) -> Result<(WebSocket<AutoStream>, Response<()>), Box<dyn Error>> {
     let (socket, response) = connect(Url::parse(url).unwrap()).expect("Can't connect.");
 
-    println!("Connected to the server");
-    println!("Response HTTP code: {}", response.status());
+    log::info!("Connected to the server");
+    log::info!("Response HTTP code: {}", response.status());
 
     Ok((socket, response))
 }
@@ -31,8 +31,7 @@ pub fn deserialize_host_data(
     if let Message::Text(msg) = msg {
         // Uggly hack to manage msg
         if !msg.contains("joined") {
-            // let msg = msg.strip_prefix(">>  : ").unwrap().to_string();
-            println!("{}", msg);
+            log::debug!("{}", msg);
 
             if mode != "host" {
                 asteroids.clear();

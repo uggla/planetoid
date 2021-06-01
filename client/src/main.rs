@@ -11,6 +11,7 @@ use crate::network::{connect_ws, deserialize_host_data, serialize_host_data};
 use crate::ship::Ship;
 use crate::{asteroid::Asteroid, collision::is_collided};
 use macroquad::prelude::*;
+use simple_logger::SimpleLogger;
 #[cfg(not(target_arch = "wasm32"))]
 use std::{sync::mpsc, thread};
 use structopt::StructOpt;
@@ -57,9 +58,13 @@ fn window_conf() -> Conf {
 
 #[macroquad::main(window_conf)]
 async fn main() {
+    SimpleLogger::new()
+        .with_level(log::LevelFilter::Debug)
+        .init()
+        .unwrap();
     let opt = Opt::from_args();
-    println!("{:#?}", opt);
-    info!("Starting game.");
+    log::debug!("{:#?}", opt);
+    log::info!("Starting game.");
     const MAX_ASTEROIDS: u8 = 10;
     let mut gameover = false;
     let mut last_shot = get_time();
@@ -105,7 +110,7 @@ async fn main() {
         });
 
         if opt.mode != "host" {
-            println!("Waiting synchronization data");
+            log::info!("Waiting synchronization data");
             loop {
                 let msg = rx_from_socket.recv().unwrap();
                 deserialize_host_data(&opt.mode, msg, &mut asteroids, &mut ship, &mut gameover);
@@ -254,7 +259,7 @@ async fn main() {
 
         ship.draw(BLACK);
 
-        //println!("{} fps", get_fps());
+        log::trace!("{} fps", get_fps());
         next_frame().await;
         frame_count += 1;
     }
