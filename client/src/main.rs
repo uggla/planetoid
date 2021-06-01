@@ -124,7 +124,7 @@ async fn main() {
             println!("Waiting synchronization data");
             loop {
                 let msg = rx_from_socket.recv().unwrap();
-                deserialize_host_data(&opt.mode, msg, &mut asteroids, &mut ship.bullets);
+                deserialize_host_data(&opt.mode, msg, &mut asteroids, &mut ship);
                 if !asteroids.is_empty() {
                     break;
                 }
@@ -139,7 +139,7 @@ async fn main() {
         if !opt.solo {
             let _received = match rx_from_socket.try_recv() {
                 Ok(msg) => {
-                    deserialize_host_data(&opt.mode, msg, &mut asteroids, &mut ship.bullets);
+                    deserialize_host_data(&opt.mode, msg, &mut asteroids, &mut ship);
                 }
                 Err(mpsc::TryRecvError::Empty) => (),
                 Err(mpsc::TryRecvError::Disconnected) => panic!("Disconnected"),
@@ -148,7 +148,7 @@ async fn main() {
             if frame_count > 4 {
                 if opt.mode == "host" {
                     tx_to_socket
-                        .send(serialize_host_data(&mut asteroids, &mut ship.bullets))
+                        .send(serialize_host_data(&mut asteroids, &mut ship))
                         .unwrap();
                 }
                 frame_count = 0;
@@ -214,7 +214,6 @@ async fn main() {
         } else if is_key_down(KeyCode::Left) {
             ship.set_rot(ship.rot() - 5.);
         }
-
         if is_key_down(KeyCode::Escape) {
             break;
         }

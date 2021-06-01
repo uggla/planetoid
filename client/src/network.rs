@@ -1,4 +1,4 @@
-use crate::{asteroid::Asteroid, bullet::Bullet};
+use crate::{asteroid::Asteroid, ship::Ship};
 use serde::{Deserialize, Serialize};
 use std::error::Error;
 use tungstenite::http::Response;
@@ -17,14 +17,14 @@ pub fn connect_ws(url: &str) -> Result<(WebSocket<AutoStream>, Response<()>), Bo
 #[derive(Serialize, Deserialize)]
 struct GameData {
     asteroids: Vec<Asteroid>,
-    bullets: Vec<Bullet>,
+    ship: Ship,
 }
 
 pub fn deserialize_host_data(
     mode: &str,
     msg: Message,
     asteroids: &mut Vec<Asteroid>,
-    bullets: &mut Vec<Bullet>,
+    ship: &mut Ship,
 ) {
     if let Message::Text(msg) = msg {
         // Uggly hack to manage msg
@@ -34,19 +34,19 @@ pub fn deserialize_host_data(
 
             if mode != "host" {
                 asteroids.clear();
-                bullets.clear();
+                // ship.clear();
                 let gamedata: GameData = serde_json::from_str(&msg).unwrap();
                 *asteroids = gamedata.asteroids;
-                *bullets = gamedata.bullets;
+                *ship = gamedata.ship;
             }
         }
     }
 }
 
-pub fn serialize_host_data(asteroids: &mut Vec<Asteroid>, bullets: &mut Vec<Bullet>) -> String {
+pub fn serialize_host_data(asteroids: &mut Vec<Asteroid>, ship: &mut Ship) -> String {
     let gamedata = GameData {
         asteroids: asteroids.to_vec(),
-        bullets: bullets.to_vec(),
+        ship: ship.clone(),
     };
 
     serde_json::to_string(&gamedata).unwrap()
