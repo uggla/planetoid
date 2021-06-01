@@ -18,6 +18,7 @@ pub fn connect_ws(url: &str) -> Result<(WebSocket<AutoStream>, Response<()>), Bo
 struct GameData {
     asteroids: Vec<Asteroid>,
     ship: Ship,
+    gameover: bool,
 }
 
 pub fn deserialize_host_data(
@@ -25,6 +26,7 @@ pub fn deserialize_host_data(
     msg: Message,
     asteroids: &mut Vec<Asteroid>,
     ship: &mut Ship,
+    gameover: &mut bool,
 ) {
     if let Message::Text(msg) = msg {
         // Uggly hack to manage msg
@@ -38,15 +40,21 @@ pub fn deserialize_host_data(
                 let gamedata: GameData = serde_json::from_str(&msg).unwrap();
                 *asteroids = gamedata.asteroids;
                 *ship = gamedata.ship;
+                *gameover = gamedata.gameover;
             }
         }
     }
 }
 
-pub fn serialize_host_data(asteroids: &mut Vec<Asteroid>, ship: &mut Ship) -> String {
+pub fn serialize_host_data(
+    asteroids: &mut Vec<Asteroid>,
+    ship: &mut Ship,
+    gameover: &mut bool,
+) -> String {
     let gamedata = GameData {
         asteroids: asteroids.to_vec(),
         ship: ship.clone(),
+        gameover: *gameover,
     };
 
     serde_json::to_string(&gamedata).unwrap()

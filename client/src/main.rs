@@ -123,7 +123,7 @@ async fn main() {
             println!("Waiting synchronization data");
             loop {
                 let msg = rx_from_socket.recv().unwrap();
-                deserialize_host_data(&opt.mode, msg, &mut asteroids, &mut ship);
+                deserialize_host_data(&opt.mode, msg, &mut asteroids, &mut ship, &mut gameover);
                 if !asteroids.is_empty() {
                     break;
                 }
@@ -138,7 +138,7 @@ async fn main() {
         if !opt.solo {
             let _received = match rx_from_socket.try_recv() {
                 Ok(msg) => {
-                    deserialize_host_data(&opt.mode, msg, &mut asteroids, &mut ship);
+                    deserialize_host_data(&opt.mode, msg, &mut asteroids, &mut ship, &mut gameover);
                 }
                 Err(mpsc::TryRecvError::Empty) => (),
                 Err(mpsc::TryRecvError::Disconnected) => panic!("Disconnected"),
@@ -147,7 +147,11 @@ async fn main() {
             if frame_count > 4 {
                 if opt.mode == "host" {
                     tx_to_socket
-                        .send(serialize_host_data(&mut asteroids, &mut ship))
+                        .send(serialize_host_data(
+                            &mut asteroids,
+                            &mut ship,
+                            &mut gameover,
+                        ))
                         .unwrap();
                 }
                 frame_count = 0;
@@ -171,16 +175,17 @@ async fn main() {
                 font_size,
                 DARKGRAY,
             );
-
-            if is_key_down(KeyCode::Enter) {
-                info!("Restarting game.");
-                ship = Ship::new();
-                asteroids = Vec::new();
-                gameover = false;
-                for _ in 0..MAX_ASTEROIDS {
-                    asteroids.push(Asteroid::new());
+            if opt.mode != "spectator" {
+                if is_key_down(KeyCode::Enter) {
+                    info!("Restarting game.");
+                    ship = Ship::new();
+                    asteroids = Vec::new();
+                    gameover = false;
+                    for _ in 0..MAX_ASTEROIDS {
+                        asteroids.push(Asteroid::new());
+                    }
+                    frame_count = 0;
                 }
-                frame_count = 0;
             }
 
             if is_key_down(KeyCode::Escape) {
