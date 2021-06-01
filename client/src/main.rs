@@ -73,21 +73,6 @@ async fn main() {
         }
     }
 
-    // let mut asteroids_serde = Vec::new();
-    // for asteroid in &asteroids {
-    //     asteroids_serde.push(asteroid.to_serde());
-    // }
-    // let serialized = serde_json::to_string(&asteroids_serde).unwrap();
-    // println!("{}", serialized);
-
-    // asteroids.clear();
-    // asteroids_serde.clear();
-    // asteroids_serde = serde_json::from_str(&serialized).unwrap();
-    // // dbg!(&asteroids_serde);
-    // for asteroid in &asteroids_serde {
-    //     asteroids.push(Asteroid::from_serde(asteroid));
-    // }
-
     #[cfg(not(target_arch = "wasm32"))]
     let (tx_from_socket, rx_from_socket) = mpsc::channel();
     #[cfg(not(target_arch = "wasm32"))]
