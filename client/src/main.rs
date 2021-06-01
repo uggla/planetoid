@@ -11,6 +11,7 @@ use crate::network::{connect_ws, deserialize_host_data, serialize_host_data};
 use crate::ship::Ship;
 use crate::{asteroid::Asteroid, collision::is_collided};
 use macroquad::prelude::*;
+#[cfg(not(target_arch = "wasm32"))]
 use simple_logger::SimpleLogger;
 #[cfg(not(target_arch = "wasm32"))]
 use std::{sync::mpsc, thread};
@@ -58,6 +59,7 @@ fn window_conf() -> Conf {
 
 #[macroquad::main(window_conf)]
 async fn main() {
+    #[cfg(not(target_arch = "wasm32"))]
     SimpleLogger::new()
         .with_level(log::LevelFilter::Debug)
         .init()
