@@ -160,17 +160,15 @@ async fn main() {
                 font_size,
                 DARKGRAY,
             );
-            if opt.mode != "spectator" {
-                if is_key_down(KeyCode::Enter) {
-                    info!("Restarting game.");
-                    ship = Ship::new();
-                    asteroids = Vec::new();
-                    gameover = false;
-                    for _ in 0..MAX_ASTEROIDS {
-                        asteroids.push(Asteroid::new());
-                    }
-                    frame_count = 0;
+            if opt.mode != "spectator" && is_key_down(KeyCode::Enter) {
+                log::info!("Restarting game.");
+                ship = Ship::new();
+                asteroids = Vec::new();
+                gameover = false;
+                for _ in 0..MAX_ASTEROIDS {
+                    asteroids.push(Asteroid::new());
                 }
+                frame_count = 0;
             }
 
             if is_key_down(KeyCode::Escape) {
