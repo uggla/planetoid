@@ -271,7 +271,7 @@ async fn main() {
             asteroid.draw();
         }
 
-        ship.draw();
+        ship.draw(BLACK);
 
         //println!("{} fps", get_fps());
         next_frame().await;

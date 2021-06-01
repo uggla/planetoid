@@ -35,7 +35,7 @@ impl Ship {
         self.rot.to_radians()
     }
 
-    pub fn draw(&self) {
+    pub fn draw(&self, color: Color) {
         let v1 = Vec2::new(
             self.pos.x + self.rotation().sin() * Ship::HEIGHT / 2.,
             self.pos.y - self.rotation().cos() * Ship::HEIGHT / 2.,
@@ -72,8 +72,8 @@ impl Ship {
                 + self.rotation().sin() * Ship::BASE / 4.
                 + self.rotation().cos() * Ship::HEIGHT / 4.,
         );
-        draw_triangle_lines(v1, v2, v3, 2., BLACK);
-        draw_triangle_lines(v1_2, v2_2, v3_2, 2., BLACK);
+        draw_triangle_lines(v1, v2, v3, 2., color);
+        draw_triangle_lines(v1_2, v2_2, v3_2, 2., color);
     }
 
     pub fn slow_down(&mut self) {
