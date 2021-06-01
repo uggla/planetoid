@@ -12,7 +12,7 @@ pub struct Ship {
     acc: Vec2,
     rot: f32,
     size: f32,
-    bullets: Vec<Bullet>,
+    pub bullets: Vec<Bullet>,
 }
 
 impl Ship {
