@@ -12,11 +12,12 @@ use crate::network::{connect_ws, deserialize_host_data, serialize_host_data};
 use crate::ship::Ship;
 use crate::{asteroid::Asteroid, collision::is_collided};
 use macroquad::prelude::*;
-use std::sync::mpsc;
-use std::thread;
+#[cfg(not(target_arch = "wasm32"))]
+use std::{sync::mpsc, thread};
 use structopt::StructOpt;
 #[cfg(not(target_arch = "wasm32"))]
 use tungstenite::Message;
+
 #[derive(StructOpt, Debug)]
 #[structopt(name = "planetoid", version = "0.1.0")]
 /// Planetoid is a asteroid clone
@@ -37,6 +38,11 @@ struct Opt {
     /// Network mode
     #[structopt(short, long, default_value = "host", possible_values = &["host","guest","spectator"])]
     mode: String,
+
+    /// Solo mode
+    /// Do not connect to network
+    #[structopt(short, long)]
+    solo: bool,
 }
 
 fn window_conf() -> Conf {
@@ -89,62 +95,65 @@ async fn main() {
     #[cfg(not(target_arch = "wasm32"))]
     let (tx_to_socket, rx_to_socket) = mpsc::channel();
 
-    let url = opt.url.clone();
-    let mode = opt.mode.clone();
-
     #[cfg(not(target_arch = "wasm32"))]
-    thread::spawn(move || {
-        let (mut socket, _response) = connect_ws(&url).unwrap();
-        loop {
-            // let _received = match rx_to_socket.try_recv() {
-            //     Ok(msg) => socket
-            //         .write_message(Message::Text(msg))
-            //         .expect("Cannot write to socket."),
-            //     Err(mpsc::TryRecvError::Empty) => (),
-            //     Err(mpsc::TryRecvError::Disconnected) => panic!("Disconnected"),
-            // };
-            if mode == "host" {
-                let received = rx_to_socket.recv().unwrap();
-                socket
-                    .write_message(Message::Text(received))
-                    .expect("Cannot write to socket.");
+    if !opt.solo {
+        let url = opt.url.clone();
+        let mode = opt.mode.clone();
+
+        thread::spawn(move || {
+            let (mut socket, _response) = connect_ws(&url).unwrap();
+            loop {
+                // let _received = match rx_to_socket.try_recv() {
+                //     Ok(msg) => socket
+                //         .write_message(Message::Text(msg))
+                //         .expect("Cannot write to socket."),
+                //     Err(mpsc::TryRecvError::Empty) => (),
+                //     Err(mpsc::TryRecvError::Disconnected) => panic!("Disconnected"),
+                // };
+                if mode == "host" {
+                    let received = rx_to_socket.recv().unwrap();
+                    socket
+                        .write_message(Message::Text(received))
+                        .expect("Cannot write to socket.");
+                }
+                let msg = socket.read_message().expect("Error reading message");
+                tx_from_socket.send(msg).unwrap();
             }
-            let msg = socket.read_message().expect("Error reading message");
-            tx_from_socket.send(msg).unwrap();
-        }
-    });
+        });
 
-    #[cfg(not(target_arch = "wasm32"))]
-    if opt.mode != "host" {
-        println!("Waiting synchronization data");
-        loop {
-            let msg = rx_from_socket.recv().unwrap();
-            deserialize_host_data(&opt.mode, msg, &mut asteroids, &mut bullets);
-            if !asteroids.is_empty() {
-                break;
+        if opt.mode != "host" {
+            println!("Waiting synchronization data");
+            loop {
+                let msg = rx_from_socket.recv().unwrap();
+                deserialize_host_data(&opt.mode, msg, &mut asteroids, &mut bullets);
+                if !asteroids.is_empty() {
+                    break;
+                }
             }
         }
     }
 
     let mut frame_count: u32 = 0;
+
     loop {
         #[cfg(not(target_arch = "wasm32"))]
-        let _received = match rx_from_socket.try_recv() {
-            Ok(msg) => {
-                deserialize_host_data(&opt.mode, msg, &mut asteroids, &mut bullets);
-            }
-            Err(mpsc::TryRecvError::Empty) => (),
-            Err(mpsc::TryRecvError::Disconnected) => panic!("Disconnected"),
-        };
+        if !opt.solo {
+            let _received = match rx_from_socket.try_recv() {
+                Ok(msg) => {
+                    deserialize_host_data(&opt.mode, msg, &mut asteroids, &mut bullets);
+                }
+                Err(mpsc::TryRecvError::Empty) => (),
+                Err(mpsc::TryRecvError::Disconnected) => panic!("Disconnected"),
+            };
 
-        if frame_count > 4 {
-            if opt.mode == "host" {
-                #[cfg(not(target_arch = "wasm32"))]
-                tx_to_socket
-                    .send(serialize_host_data(&mut asteroids, &mut bullets))
-                    .unwrap();
+            if frame_count > 4 {
+                if opt.mode == "host" {
+                    tx_to_socket
+                        .send(serialize_host_data(&mut asteroids, &mut bullets))
+                        .unwrap();
+                }
+                frame_count = 0;
             }
-            frame_count = 0;
         }
 
         if gameover {
