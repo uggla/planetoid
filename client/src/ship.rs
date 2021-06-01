@@ -104,6 +104,16 @@ impl Ship {
     pub fn set_rot(&mut self, rot: f32) {
         self.rot = rot;
     }
+
+    pub fn shoot(&mut self, frame_t: f64) {
+        let rot_vec = Vec2::new(self.rotation().sin(), -self.rotation().cos());
+        self.bullets.push(Bullet::new(
+            self.pos() + rot_vec * Ship::HEIGHT / 2.,
+            rot_vec * 7.,
+            frame_t,
+            false,
+        ));
+    }
 }
 
 impl Collided for Ship {

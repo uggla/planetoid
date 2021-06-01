@@ -5,7 +5,6 @@ mod collision;
 mod network;
 mod screen;
 mod ship;
-use crate::bullet::Bullet;
 use crate::collision::Collided;
 #[cfg(not(target_arch = "wasm32"))]
 use crate::network::{connect_ws, deserialize_host_data, serialize_host_data};
@@ -200,13 +199,7 @@ async fn main() {
             }
 
             if is_key_down(KeyCode::Space) && frame_t - last_shot > 0.1 {
-                let rot_vec = Vec2::new(ship.rotation().sin(), -ship.rotation().cos());
-                ship.bullets.push(Bullet::new(
-                    ship.pos() + rot_vec * Ship::HEIGHT / 2.,
-                    rot_vec * 7.,
-                    frame_t,
-                    false,
-                ));
+                ship.shoot(frame_t);
                 last_shot = frame_t;
             }
 
