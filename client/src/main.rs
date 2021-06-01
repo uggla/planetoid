@@ -194,25 +194,27 @@ async fn main() {
         let frame_t = get_time();
         ship.slow_down();
 
-        if is_key_down(KeyCode::Up) {
-            ship.accelerate();
-        }
+        if opt.mode != "spectator" {
+            if is_key_down(KeyCode::Up) {
+                ship.accelerate();
+            }
 
-        if is_key_down(KeyCode::Space) && frame_t - last_shot > 0.1 {
-            let rot_vec = Vec2::new(ship.rotation().sin(), -ship.rotation().cos());
-            ship.bullets.push(Bullet::new(
-                ship.pos() + rot_vec * Ship::HEIGHT / 2.,
-                rot_vec * 7.,
-                frame_t,
-                false,
-            ));
-            last_shot = frame_t;
-        }
+            if is_key_down(KeyCode::Space) && frame_t - last_shot > 0.1 {
+                let rot_vec = Vec2::new(ship.rotation().sin(), -ship.rotation().cos());
+                ship.bullets.push(Bullet::new(
+                    ship.pos() + rot_vec * Ship::HEIGHT / 2.,
+                    rot_vec * 7.,
+                    frame_t,
+                    false,
+                ));
+                last_shot = frame_t;
+            }
 
-        if is_key_down(KeyCode::Right) {
-            ship.set_rot(ship.rot() + 5.);
-        } else if is_key_down(KeyCode::Left) {
-            ship.set_rot(ship.rot() - 5.);
+            if is_key_down(KeyCode::Right) {
+                ship.set_rot(ship.rot() + 5.);
+            } else if is_key_down(KeyCode::Left) {
+                ship.set_rot(ship.rot() - 5.);
+            }
         }
         if is_key_down(KeyCode::Escape) {
             break;
