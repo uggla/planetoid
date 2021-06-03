@@ -18,6 +18,7 @@ use std::{sync::mpsc, thread};
 use structopt::StructOpt;
 #[cfg(not(target_arch = "wasm32"))]
 use tungstenite::Message;
+use url::Url;
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "planetoid", version = "0.1.0")]
@@ -100,11 +101,15 @@ async fn main() {
 
     #[cfg(not(target_arch = "wasm32"))]
     if !opt.solo {
-        let url = format!("ws://{}:{}/gamedata/{}", &opt.host, &opt.port, &opt.name);
+        let url = Url::parse(&format!(
+            "ws://{}:{}/gamedata/{}",
+            &opt.host, &opt.port, &opt.name
+        ))
+        .expect("Cannot parse url.");
         let mode = opt.mode.clone();
 
         thread::spawn(move || {
-            let (mut socket, _response) = connect_ws(&url).unwrap();
+            let (mut socket, _response) = connect_ws(url).unwrap();
             loop {
                 // let _received = match rx_to_socket.try_recv() {
                 //     Ok(msg) => socket

@@ -5,8 +5,9 @@ use tungstenite::http::Response;
 use tungstenite::{client::AutoStream, connect, Message, WebSocket};
 use url::Url;
 
-pub fn connect_ws(url: &str) -> Result<(WebSocket<AutoStream>, Response<()>), Box<dyn Error>> {
-    let (socket, response) = connect(Url::parse(url).unwrap()).expect("Can't connect.");
+pub fn connect_ws(url: Url) -> Result<(WebSocket<AutoStream>, Response<()>), Box<dyn Error>> {
+    log::debug!("Connect to {}", url);
+    let (socket, response) = connect(url).expect("Can't connect to specified url.");
 
     log::info!("Connected to the server");
     log::info!("Response HTTP code: {}", response.status());
