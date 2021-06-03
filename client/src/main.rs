@@ -24,13 +24,17 @@ use tungstenite::Message;
 /// Planetoid is a asteroid clone
 
 struct Opt {
-    /// Url
-    #[structopt(
-        short,
-        long,
-        default_value = "ws://localhost:8080/gamedata/planetoid_host"
-    )]
-    url: String,
+    /// Debug mode (_ (error), -d (info), -dd (debug), -ddd (trace))
+    #[structopt(short, long, parse(from_occurrences))]
+    debug: u8,
+
+    /// Host
+    #[structopt(short, long, default_value = "localhost")]
+    host: String,
+
+    /// Port
+    #[structopt(short, long, default_value = "8080")]
+    port: u16,
 
     /// God mode
     #[structopt(short, long)]
@@ -40,10 +44,12 @@ struct Opt {
     #[structopt(short, long, default_value = "host", possible_values = &["host","guest","spectator"])]
     mode: String,
 
-    /// Solo mode
-    /// Do not connect to network
-    #[structopt(short, long)]
+    /// Solo mode, do not connect to network
+    #[structopt(short, long, conflicts_with = "mode")]
     solo: bool,
+
+    /// Player name
+    name: String,
 }
 
 fn window_conf() -> Conf {
@@ -59,18 +65,25 @@ fn window_conf() -> Conf {
 
 #[macroquad::main(window_conf)]
 async fn main() {
-    #[cfg(not(target_arch = "wasm32"))]
-    SimpleLogger::new()
-        .with_level(log::LevelFilter::Debug)
-        .init()
-        .unwrap();
     let opt = Opt::from_args();
+
+    let log_level = match opt.debug {
+        0 => log::LevelFilter::Error,
+        1 => log::LevelFilter::Info,
+        2 => log::LevelFilter::Debug,
+        3 => log::LevelFilter::Trace,
+        _ => log::LevelFilter::Trace,
+    };
+
+    #[cfg(not(target_arch = "wasm32"))]
+    SimpleLogger::new().with_level(log_level).init().unwrap();
     log::debug!("{:#?}", opt);
     log::info!("Starting game.");
+
     const MAX_ASTEROIDS: u8 = 10;
     let mut gameover = false;
     let mut last_shot = get_time();
-    let mut ship = Ship::new(String::from("Uggla"));
+    let mut ship = Ship::new(String::from(&opt.name));
 
     let mut asteroids = Vec::new();
 
@@ -87,7 +100,7 @@ async fn main() {
 
     #[cfg(not(target_arch = "wasm32"))]
     if !opt.solo {
-        let url = opt.url.clone();
+        let url = format!("ws://{}:{}/gamedata/{}", &opt.host, &opt.port, &opt.name);
         let mode = opt.mode.clone();
 
         thread::spawn(move || {
@@ -169,7 +182,7 @@ async fn main() {
             );
             if opt.mode != "spectator" && is_key_down(KeyCode::Enter) {
                 log::info!("Restarting game.");
-                ship = Ship::new(String::from("Uggla"));
+                ship = Ship::new(String::from(&opt.name));
                 asteroids = Vec::new();
                 gameover = false;
                 for _ in 0..MAX_ASTEROIDS {
