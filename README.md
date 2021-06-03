@@ -16,7 +16,10 @@ This project is in an early stage, so a lot of features are missing and need to 
 
 ## Project current status
 * Clients (native and wasm) can be built.
-* Native client can share asteroid position to a spectator. Spectator is another native client started in the spectator mode.
+* Native client can share the game with a spectator. Spectator is another native client started in the spectator mode.
+* WIP add multiplayer.
+* WIP send player names to server to display current games.
+* WIP store games results.
 
 ## Authors
 
