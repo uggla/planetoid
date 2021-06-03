@@ -124,7 +124,7 @@ async fn main() {
     }
 
     let mut frame_count: u32 = 0;
-
+    let time_before_entering_loop = get_time();
     loop {
         #[cfg(not(target_arch = "wasm32"))]
         if !opt.solo {
@@ -185,7 +185,7 @@ async fn main() {
             continue;
         }
 
-        let frame_t = get_time();
+        let frame_t = get_time() - time_before_entering_loop;
         ship.slow_down();
 
         if opt.mode != "spectator" {
