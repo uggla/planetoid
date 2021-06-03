@@ -70,7 +70,7 @@ async fn main() {
     const MAX_ASTEROIDS: u8 = 10;
     let mut gameover = false;
     let mut last_shot = get_time();
-    let mut ship = Ship::new();
+    let mut ship = Ship::new(String::from("Uggla"));
 
     let mut asteroids = Vec::new();
 
@@ -169,7 +169,7 @@ async fn main() {
             );
             if opt.mode != "spectator" && is_key_down(KeyCode::Enter) {
                 log::info!("Restarting game.");
-                ship = Ship::new();
+                ship = Ship::new(String::from("Uggla"));
                 asteroids = Vec::new();
                 gameover = false;
                 for _ in 0..MAX_ASTEROIDS {
@@ -219,7 +219,7 @@ async fn main() {
 
         let mut new_asteroids = Vec::new();
         for asteroid in asteroids.iter_mut() {
-            if is_collided(asteroid, &ship) && (opt.mode != "spectator" && !opt.god) {
+            if is_collided(asteroid, &ship) && !opt.god && opt.mode != "spectator" {
                 gameover = true;
                 break;
             }
