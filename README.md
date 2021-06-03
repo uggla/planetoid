@@ -94,7 +94,7 @@ dnf install libX11-devel libXi-devel mesa-libGL-devel alsa-lib-devel
 3. Go to the client directory and run the native client
 ```bash
 cd client
-cargo run
+cargo run -- Planetoid
 ```
 
 #### Wasm32 client
@@ -131,4 +131,46 @@ xdg-open http://127.0.0.1:4000
 <!--   npm install my-project -->
 <!--   cd my-project -->
 <!-- ``` -->
+
+
+## Native client usage
+```
+planetoid 0.1.0
+Planetoid is a asteroid clone
+
+USAGE:
+    planetoid [FLAGS] [OPTIONS] <name>
+
+FLAGS:
+    -d, --debug      Debug mode (_ (error), -d (info), -dd (debug), -ddd (trace))
+    -g, --god        God mode
+        --help       Prints help information
+    -s, --solo       Solo mode, do not connect to network
+    -V, --version    Prints version information
+
+OPTIONS:
+    -h, --host <host>    Host [default: localhost]
+    -m, --mode <mode>    Network mode [default: host]  [possible values: host, guest, spectator]
+    -p, --port <port>    Port [default: 8080]
+
+ARGS:
+    <name>    Player name
+```
+### Examples
+#### Running in solo mode
+`cargo run -- -s Planetoid`
+
+#### Running in network mode with a spectator
+On the first terminal:
+`cargo run -- -m host Planetoid`
+
+On the second terminal:
+`cargo run -- -m spectator "Planetoid spectator"`
+
+#### Running in network mode, debug and as god
+`-dd`: debug allow to see messages sent to the web socket.
+
+`-g`: god mode, ship cannot be destroyed.
+
+`cargo run -- -m host -dd -g Planetoid`
 
