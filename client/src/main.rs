@@ -210,13 +210,13 @@ async fn main() {
         }
 
         let frame_t = get_time() - time_before_entering_loop;
-        for ship in &mut players {
+        for ship in players.iter_mut() {
             ship.slow_down();
         }
 
         if opt.mode != "spectator" {
             if is_key_down(KeyCode::Up) {
-                for ship in &mut players {
+                for ship in players.iter_mut() {
                     if ship.name() == opt.name {
                         ship.accelerate();
                     }
@@ -224,7 +224,7 @@ async fn main() {
             }
 
             if is_key_down(KeyCode::Space) && frame_t - last_shot > 0.1 {
-                for ship in &mut players {
+                for ship in players.iter_mut() {
                     if ship.name() == opt.name {
                         ship.shoot(frame_t);
                     }
@@ -233,13 +233,13 @@ async fn main() {
             }
 
             if is_key_down(KeyCode::Right) {
-                for ship in &mut players {
+                for ship in players.iter_mut() {
                     if ship.name() == opt.name {
                         ship.set_rot(ship.rot() + 5.);
                     }
                 }
             } else if is_key_down(KeyCode::Left) {
-                for ship in &mut players {
+                for ship in players.iter_mut() {
                     if ship.name() == opt.name {
                         ship.set_rot(ship.rot() - 5.);
                     }
@@ -250,11 +250,11 @@ async fn main() {
             break;
         }
 
-        for ship in &mut players {
+        for ship in players.iter_mut() {
             ship.update_pos();
         }
 
-        for ship in &mut players {
+        for ship in players.iter_mut() {
             for bullet in ship.bullets.iter_mut() {
                 bullet.update_pos();
             }
@@ -264,7 +264,7 @@ async fn main() {
             asteroid.update_pos();
         }
 
-        for ship in &mut players {
+        for ship in players.iter_mut() {
             let mut new_asteroids = Vec::new();
             for asteroid in asteroids.iter_mut() {
                 if is_collided(asteroid, ship) && !opt.god && opt.mode != "spectator" {
