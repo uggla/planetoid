@@ -85,7 +85,8 @@ async fn main() {
     const MAX_ASTEROIDS: u8 = 10;
     let mut gameover = false;
     let mut last_shot = get_time();
-    let mut ship = Ship::new(String::from(&opt.name));
+    let mut players: Vec<Ship> = Vec::new();
+    players.push(Ship::new(String::from(&opt.name)));
 
     let mut asteroids = Vec::new();
 
@@ -131,7 +132,7 @@ async fn main() {
             log::info!("Waiting synchronization data");
             loop {
                 let msg = rx_from_socket.recv().unwrap();
-                deserialize_host_data(&opt.mode, msg, &mut asteroids, &mut ship, &mut gameover);
+                deserialize_host_data(&opt.mode, msg, &mut asteroids, &mut players, &mut gameover);
                 if !asteroids.is_empty() {
                     break;
                 }
@@ -146,7 +147,13 @@ async fn main() {
         if !opt.solo {
             let _received = match rx_from_socket.try_recv() {
                 Ok(msg) => {
-                    deserialize_host_data(&opt.mode, msg, &mut asteroids, &mut ship, &mut gameover);
+                    deserialize_host_data(
+                        &opt.mode,
+                        msg,
+                        &mut asteroids,
+                        &mut players,
+                        &mut gameover,
+                    );
                 }
                 Err(mpsc::TryRecvError::Empty) => (),
                 Err(mpsc::TryRecvError::Disconnected) => panic!("Disconnected"),
@@ -157,7 +164,7 @@ async fn main() {
                     tx_to_socket
                         .send(serialize_host_data(
                             &mut asteroids,
-                            &mut ship,
+                            &mut players,
                             &mut gameover,
                         ))
                         .unwrap();
@@ -185,7 +192,8 @@ async fn main() {
             );
             if opt.mode != "spectator" && is_key_down(KeyCode::Enter) {
                 log::info!("Restarting game.");
-                ship = Ship::new(String::from(&opt.name));
+                let mut players: Vec<Ship> = Vec::new();
+                players.push(Ship::new(String::from(&opt.name)));
                 asteroids = Vec::new();
                 gameover = false;
                 for _ in 0..MAX_ASTEROIDS {
@@ -202,80 +210,109 @@ async fn main() {
         }
 
         let frame_t = get_time() - time_before_entering_loop;
-        ship.slow_down();
+        for ship in &mut players {
+            ship.slow_down();
+        }
 
         if opt.mode != "spectator" {
             if is_key_down(KeyCode::Up) {
-                ship.accelerate();
+                for ship in &mut players {
+                    if ship.name() == opt.name {
+                        ship.accelerate();
+                    }
+                }
             }
 
             if is_key_down(KeyCode::Space) && frame_t - last_shot > 0.1 {
-                ship.shoot(frame_t);
+                for ship in &mut players {
+                    if ship.name() == opt.name {
+                        ship.shoot(frame_t);
+                    }
+                }
                 last_shot = frame_t;
             }
 
             if is_key_down(KeyCode::Right) {
-                ship.set_rot(ship.rot() + 5.);
+                for ship in &mut players {
+                    if ship.name() == opt.name {
+                        ship.set_rot(ship.rot() + 5.);
+                    }
+                }
             } else if is_key_down(KeyCode::Left) {
-                ship.set_rot(ship.rot() - 5.);
+                for ship in &mut players {
+                    if ship.name() == opt.name {
+                        ship.set_rot(ship.rot() - 5.);
+                    }
+                }
             }
         }
         if is_key_down(KeyCode::Escape) {
             break;
         }
 
-        ship.update_pos();
-
-        for bullet in ship.bullets.iter_mut() {
-            bullet.update_pos();
+        for ship in &mut players {
+            ship.update_pos();
         }
+
+        for ship in &mut players {
+            for bullet in ship.bullets.iter_mut() {
+                bullet.update_pos();
+            }
+        }
+
         for asteroid in asteroids.iter_mut() {
             asteroid.update_pos();
         }
 
-        let mut new_asteroids = Vec::new();
-        for asteroid in asteroids.iter_mut() {
-            if is_collided(asteroid, &ship) && !opt.god && opt.mode != "spectator" {
-                gameover = true;
-                break;
-            }
-            for bullet in ship.bullets.iter_mut() {
-                if is_collided(asteroid, bullet) {
-                    asteroid.set_collided(true);
-                    bullet.set_collided(true);
-                    if asteroid.sides() > 4 {
-                        new_asteroids = Asteroid::new_split(
-                            asteroid.pos(),
-                            bullet.vel().x,
-                            bullet.vel().y,
-                            asteroid.size(),
-                            asteroid.sides(),
-                        );
-                    }
+        for ship in &mut players {
+            let mut new_asteroids = Vec::new();
+            for asteroid in asteroids.iter_mut() {
+                if is_collided(asteroid, ship) && !opt.god && opt.mode != "spectator" {
+                    gameover = true;
                     break;
                 }
+                for bullet in ship.bullets.iter_mut() {
+                    if is_collided(asteroid, bullet) {
+                        asteroid.set_collided(true);
+                        bullet.set_collided(true);
+                        if asteroid.sides() > 4 {
+                            new_asteroids = Asteroid::new_split(
+                                asteroid.pos(),
+                                bullet.vel().x,
+                                bullet.vel().y,
+                                asteroid.size(),
+                                asteroid.sides(),
+                            );
+                        }
+                        break;
+                    }
+                }
             }
-        }
 
-        ship.bullets
-            .retain(|bullet| bullet.shot_at() + 1.5 > frame_t && !bullet.collided());
-        asteroids.retain(|asteroid| !asteroid.collided());
-        asteroids.append(&mut new_asteroids);
+            ship.bullets
+                .retain(|bullet| bullet.shot_at() + 1.5 > frame_t && !bullet.collided());
+            asteroids.retain(|asteroid| !asteroid.collided());
+            asteroids.append(&mut new_asteroids);
+        }
 
         if asteroids.is_empty() {
             gameover = true;
         }
 
         clear_background(LIGHTGRAY);
-        for bullet in ship.bullets.iter() {
-            bullet.draw();
+        for ship in &players {
+            for bullet in ship.bullets.iter() {
+                bullet.draw();
+            }
         }
 
         for asteroid in asteroids.iter() {
             asteroid.draw();
         }
 
-        ship.draw(BLACK);
+        for ship in &players {
+            ship.draw(BLACK);
+        }
 
         log::trace!("{} fps", get_fps());
         next_frame().await;

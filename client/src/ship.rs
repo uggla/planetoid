@@ -97,6 +97,10 @@ impl Ship {
         self.pos = screen::wrap_around(&self.pos);
     }
 
+    pub fn name(&self) -> String {
+        self.name.clone()
+    }
+
     pub fn vel(&self) -> Vec2 {
         self.vel
     }

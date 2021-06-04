@@ -40,7 +40,7 @@ pub fn connect_ws(
 #[derive(Serialize, Deserialize)]
 struct GameData {
     asteroids: Vec<Asteroid>,
-    ship: Ship,
+    players: Vec<Ship>,
     gameover: bool,
 }
 
@@ -48,7 +48,7 @@ pub fn deserialize_host_data(
     mode: &str,
     msg: Message,
     asteroids: &mut Vec<Asteroid>,
-    ship: &mut Ship,
+    players: &mut Vec<Ship>,
     gameover: &mut bool,
 ) {
     if let Message::Text(msg) = msg {
@@ -58,10 +58,11 @@ pub fn deserialize_host_data(
 
             if mode != "host" {
                 asteroids.clear();
+
                 // ship.clear();
                 let gamedata: GameData = serde_json::from_str(&msg).unwrap();
                 *asteroids = gamedata.asteroids;
-                *ship = gamedata.ship;
+                *players = gamedata.players;
                 *gameover = gamedata.gameover;
             }
         }
@@ -70,12 +71,12 @@ pub fn deserialize_host_data(
 
 pub fn serialize_host_data(
     asteroids: &mut Vec<Asteroid>,
-    ship: &mut Ship,
+    players: &mut Vec<Ship>,
     gameover: &mut bool,
 ) -> String {
     let gamedata = GameData {
         asteroids: asteroids.to_vec(),
-        ship: ship.clone(),
+        players: players.clone(),
         gameover: *gameover,
     };
 
