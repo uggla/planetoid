@@ -1,5 +1,7 @@
 use macroquad::prelude::*;
 
+use crate::{asteroid::Asteroid, ship::Ship};
+
 pub trait Collided {
     fn size(&self) -> f32;
     fn pos(&self) -> Vec2;
@@ -7,4 +9,62 @@ pub trait Collided {
 
 pub fn is_collided<A: Collided, B: Collided>(obj1: &A, obj2: &B) -> bool {
     (obj1.pos() - obj2.pos()).length() < obj1.size() + obj2.size()
+}
+
+pub fn manage_collisions(
+    players: &mut Vec<Ship>,
+    asteroids: &mut Vec<Asteroid>,
+    god: bool,
+    mode: &str,
+    frame_t: f64,
+) {
+    let mut opponents = players.clone();
+    for ship in players.iter_mut() {
+        let mut new_asteroids = Vec::new();
+        for asteroid in asteroids.iter_mut() {
+            if is_collided(asteroid, ship) && !god && mode != "spectator" {
+                ship.set_collided(true);
+            }
+            for bullet in ship.bullets.iter_mut() {
+                if is_collided(asteroid, bullet) {
+                    asteroid.set_collided(true);
+                    bullet.set_collided(true);
+                    if asteroid.sides() > 4 {
+                        new_asteroids = Asteroid::new_split(
+                            asteroid.pos(),
+                            bullet.vel().x,
+                            bullet.vel().y,
+                            asteroid.size(),
+                            asteroid.sides(),
+                        );
+                    }
+                    break;
+                }
+            }
+        }
+
+        for opponent in opponents.iter_mut() {
+            if opponent.name() != ship.name() {
+                for bullet in ship.bullets.iter_mut() {
+                    if is_collided(opponent, bullet) {
+                        bullet.set_collided(true);
+                        opponent.set_collided(true);
+                    }
+                }
+            }
+        }
+
+        ship.bullets
+            .retain(|bullet| bullet.shot_at() + 1.5 > frame_t && !bullet.collided());
+        asteroids.retain(|asteroid| !asteroid.collided());
+        asteroids.append(&mut new_asteroids);
+    }
+
+    for ship_index in 0..players.len() {
+        if opponents[ship_index].collided() {
+            players[ship_index].set_collided(true);
+        }
+    }
+
+    players.retain(|ship| !ship.collided());
 }

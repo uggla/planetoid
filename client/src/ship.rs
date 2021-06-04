@@ -25,7 +25,15 @@ impl Ship {
     pub fn new(name: String) -> Self {
         Self {
             name,
-            pos: screen::center(),
+            // pos: screen::center(),
+            // pos: screen::center()
+            //     + Vec2::new(rand::gen_range(-1., 1.), rand::gen_range(-1., 1.)).normalize()
+            //         * screen_width().min(screen_height())
+            //         / 2.,
+            pos: Vec2::new(
+                rand::gen_range(0., screen_width()),
+                rand::gen_range(0., screen_height()),
+            ),
             vel: Vec2::new(0., 0.),
             acc: Vec2::new(0., 0.),
             rot: 0.,

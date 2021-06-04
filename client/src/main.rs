@@ -5,11 +5,10 @@ mod collision;
 mod network;
 mod screen;
 mod ship;
-use crate::asteroid::Asteroid;
-use crate::collision::{is_collided, Collided};
 #[cfg(not(target_arch = "wasm32"))]
 use crate::network::{connect_stream, connect_ws, deserialize_host_data, serialize_host_data};
 use crate::ship::Ship;
+use crate::{asteroid::Asteroid, collision::manage_collisions};
 use macroquad::prelude::*;
 #[cfg(not(target_arch = "wasm32"))]
 use simple_logger::SimpleLogger;
@@ -87,6 +86,9 @@ async fn main() {
     let mut last_shot = get_time();
     let mut players: Vec<Ship> = Vec::new();
     players.push(Ship::new(String::from(&opt.name)));
+    players.push(Ship::new(String::from("Player 2")));
+    players.push(Ship::new(String::from("Player 3")));
+    players.push(Ship::new(String::from("Player 4")));
 
     let mut asteroids = Vec::new();
 
@@ -264,55 +266,7 @@ async fn main() {
             asteroid.update_pos();
         }
 
-        let mut opponents = players.clone();
-        for ship in players.iter_mut() {
-            let mut new_asteroids = Vec::new();
-            for asteroid in asteroids.iter_mut() {
-                if is_collided(asteroid, ship) && !opt.god && opt.mode != "spectator" {
-                    ship.set_collided(true);
-                }
-                for bullet in ship.bullets.iter_mut() {
-                    if is_collided(asteroid, bullet) {
-                        asteroid.set_collided(true);
-                        bullet.set_collided(true);
-                        if asteroid.sides() > 4 {
-                            new_asteroids = Asteroid::new_split(
-                                asteroid.pos(),
-                                bullet.vel().x,
-                                bullet.vel().y,
-                                asteroid.size(),
-                                asteroid.sides(),
-                            );
-                        }
-                        break;
-                    }
-                }
-            }
-
-            for opponent in opponents.iter_mut() {
-                if opponent.name() != ship.name() {
-                    for bullet in ship.bullets.iter_mut() {
-                        if is_collided(opponent, bullet) {
-                            bullet.set_collided(true);
-                            opponent.set_collided(true);
-                        }
-                    }
-                }
-            }
-
-            ship.bullets
-                .retain(|bullet| bullet.shot_at() + 1.5 > frame_t && !bullet.collided());
-            asteroids.retain(|asteroid| !asteroid.collided());
-            asteroids.append(&mut new_asteroids);
-        }
-
-        for ship_index in 0..players.len() {
-            if opponents[ship_index].collided() {
-                players[ship_index].set_collided(true);
-            }
-        }
-
-        players.retain(|ship| !ship.collided());
+        manage_collisions(&mut players, &mut asteroids, opt.god, &opt.mode, frame_t);
 
         if asteroids.is_empty() || players.is_empty() {
             gameover = true;
