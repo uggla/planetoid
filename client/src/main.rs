@@ -330,7 +330,11 @@ async fn main() {
         }
 
         for ship in &players {
-            ship.draw(BLACK);
+            if ship.name() == opt.name {
+                ship.draw(BLACK);
+            } else {
+                ship.draw(RED);
+            }
         }
 
         log::trace!("{} fps", get_fps());
