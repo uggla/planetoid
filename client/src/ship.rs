@@ -113,6 +113,14 @@ impl Ship {
         self.rot = rot;
     }
 
+    pub fn collided(&self) -> bool {
+        self.collided
+    }
+
+    pub fn set_collided(&mut self, collided: bool) {
+        self.collided = collided;
+    }
+
     pub fn shoot(&mut self, frame_t: f64) {
         let rot_vec = Vec2::new(self.rotation().sin(), -self.rotation().cos());
         self.bullets.push(Bullet::new(

@@ -268,8 +268,9 @@ async fn main() {
             let mut new_asteroids = Vec::new();
             for asteroid in asteroids.iter_mut() {
                 if is_collided(asteroid, ship) && !opt.god && opt.mode != "spectator" {
-                    gameover = true;
-                    break;
+                    ship.set_collided(true);
+                    // gameover = true;
+                    // break;
                 }
                 for bullet in ship.bullets.iter_mut() {
                     if is_collided(asteroid, bullet) {
@@ -295,7 +296,9 @@ async fn main() {
             asteroids.append(&mut new_asteroids);
         }
 
-        if asteroids.is_empty() {
+        players.retain(|ship| !ship.collided());
+
+        if asteroids.is_empty() || players.is_empty() {
             gameover = true;
         }
 
