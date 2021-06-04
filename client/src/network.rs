@@ -1,13 +1,35 @@
 use crate::{asteroid::Asteroid, ship::Ship};
 use serde::{Deserialize, Serialize};
-use std::error::Error;
-use tungstenite::http::Response;
-use tungstenite::{client::AutoStream, connect, Message, WebSocket};
+use std::{
+    error::Error,
+    net::{TcpStream, ToSocketAddrs},
+};
+use tungstenite::{client, http::Response};
+use tungstenite::{Message, WebSocket};
 use url::Url;
 
-pub fn connect_ws(url: Url) -> Result<(WebSocket<AutoStream>, Response<()>), Box<dyn Error>> {
-    log::debug!("Connect to {}", url);
-    let (socket, response) = connect(url).expect("Can't connect to specified url.");
+type WebSocketResult<T> = Result<T, Box<dyn Error>>;
+pub fn connect_stream(url: &Url) -> TcpStream {
+    let addr = (url.host_str().unwrap(), url.port().unwrap())
+        .to_socket_addrs()
+        .unwrap()
+        .last()
+        .expect("Cannot get host and port from url.");
+
+    log::debug!("Connect to TcpStream {}:{}", addr.ip(), addr.port());
+    TcpStream::connect(addr).expect("Cannot connect to specified address.")
+}
+
+pub fn connect_ws(
+    url: Url,
+    stream: &TcpStream,
+) -> WebSocketResult<(WebSocket<&TcpStream>, Response<()>)> {
+    log::debug!("Connect to WebSocket url {}", url);
+    let (socket, response) = client(url, stream).expect("Cannot connect to specified url.");
+
+    stream
+        .set_nonblocking(true)
+        .expect("set_nonblocking call failed");
 
     log::info!("Connected to the server");
     log::info!("Response HTTP code: {}", response.status());

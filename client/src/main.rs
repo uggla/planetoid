@@ -5,14 +5,15 @@ mod collision;
 mod network;
 mod screen;
 mod ship;
-use crate::collision::Collided;
+use crate::asteroid::Asteroid;
+use crate::collision::{is_collided, Collided};
 #[cfg(not(target_arch = "wasm32"))]
-use crate::network::{connect_ws, deserialize_host_data, serialize_host_data};
+use crate::network::{connect_stream, connect_ws, deserialize_host_data, serialize_host_data};
 use crate::ship::Ship;
-use crate::{asteroid::Asteroid, collision::is_collided};
 use macroquad::prelude::*;
 #[cfg(not(target_arch = "wasm32"))]
 use simple_logger::SimpleLogger;
+use std::{net::TcpStream, thread::sleep, time::Duration};
 #[cfg(not(target_arch = "wasm32"))]
 use std::{sync::mpsc, thread};
 use structopt::StructOpt;
@@ -106,26 +107,23 @@ async fn main() {
             &opt.host, &opt.port, &opt.name
         ))
         .expect("Cannot parse url.");
-        let mode = opt.mode.clone();
 
         thread::spawn(move || {
-            let (mut socket, _response) = connect_ws(url).unwrap();
+            let stream: TcpStream = connect_stream(&url);
+            let (mut socket, _response) = connect_ws(url, &stream).unwrap();
             loop {
-                // let _received = match rx_to_socket.try_recv() {
-                //     Ok(msg) => socket
-                //         .write_message(Message::Text(msg))
-                //         .expect("Cannot write to socket."),
-                //     Err(mpsc::TryRecvError::Empty) => (),
-                //     Err(mpsc::TryRecvError::Disconnected) => panic!("Disconnected"),
-                // };
-                if mode == "host" {
-                    let received = rx_to_socket.recv().unwrap();
-                    socket
-                        .write_message(Message::Text(received))
-                        .expect("Cannot write to socket.");
+                match rx_to_socket.try_recv() {
+                    Ok(msg) => socket
+                        .write_message(Message::Text(msg))
+                        .expect("Cannot write to WebSocket."),
+                    Err(mpsc::TryRecvError::Empty) => (),
+                    Err(mpsc::TryRecvError::Disconnected) => panic!("Client disconnected."),
+                };
+
+                if let Ok(msg) = socket.read_message() {
+                    tx_from_socket.send(msg).unwrap();
                 }
-                let msg = socket.read_message().expect("Error reading message");
-                tx_from_socket.send(msg).unwrap();
+                sleep(Duration::from_millis(5));
             }
         });
 
