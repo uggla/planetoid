@@ -264,13 +264,12 @@ async fn main() {
             asteroid.update_pos();
         }
 
+        let mut opponents = players.clone();
         for ship in players.iter_mut() {
             let mut new_asteroids = Vec::new();
             for asteroid in asteroids.iter_mut() {
                 if is_collided(asteroid, ship) && !opt.god && opt.mode != "spectator" {
                     ship.set_collided(true);
-                    // gameover = true;
-                    // break;
                 }
                 for bullet in ship.bullets.iter_mut() {
                     if is_collided(asteroid, bullet) {
@@ -290,10 +289,27 @@ async fn main() {
                 }
             }
 
+            for opponent in opponents.iter_mut() {
+                if opponent.name() != ship.name() {
+                    for bullet in ship.bullets.iter_mut() {
+                        if is_collided(opponent, bullet) {
+                            bullet.set_collided(true);
+                            opponent.set_collided(true);
+                        }
+                    }
+                }
+            }
+
             ship.bullets
                 .retain(|bullet| bullet.shot_at() + 1.5 > frame_t && !bullet.collided());
             asteroids.retain(|asteroid| !asteroid.collided());
             asteroids.append(&mut new_asteroids);
+        }
+
+        for ship_index in 0..players.len() {
+            if opponents[ship_index].collided() {
+                players[ship_index].set_collided(true);
+            }
         }
 
         players.retain(|ship| !ship.collided());
