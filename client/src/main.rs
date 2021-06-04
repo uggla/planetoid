@@ -192,7 +192,7 @@ async fn main() {
             );
             if opt.mode != "spectator" && is_key_down(KeyCode::Enter) {
                 log::info!("Restarting game.");
-                let mut players: Vec<Ship> = Vec::new();
+                players.clear();
                 players.push(Ship::new(String::from(&opt.name)));
                 asteroids = Vec::new();
                 gameover = false;
