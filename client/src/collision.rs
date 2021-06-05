@@ -20,28 +20,7 @@ pub fn manage_collisions(
 ) {
     let mut opponents = players.clone();
     for ship in players.iter_mut() {
-        let mut new_asteroids = Vec::new();
-        for asteroid in asteroids.iter_mut() {
-            if is_collided(asteroid, ship) && !god && mode != "spectator" {
-                ship.set_collided(true);
-            }
-            for bullet in ship.bullets.iter_mut() {
-                if is_collided(asteroid, bullet) {
-                    asteroid.set_collided(true);
-                    bullet.set_collided(true);
-                    if asteroid.sides() > 4 {
-                        new_asteroids = Asteroid::new_split(
-                            asteroid.pos(),
-                            bullet.vel().x,
-                            bullet.vel().y,
-                            asteroid.size(),
-                            asteroid.sides(),
-                        );
-                    }
-                    break;
-                }
-            }
-        }
+        let mut new_asteroids = ship_vs_asteroids(ship, asteroids, god, mode);
 
         for opponent in opponents.iter_mut() {
             if opponent.name() != ship.name() {
@@ -67,4 +46,43 @@ pub fn manage_collisions(
     }
 
     players.retain(|ship| !ship.collided());
+}
+
+fn ship_vs_asteroids(
+    ship: &mut Ship,
+    asteroids: &mut Vec<Asteroid>,
+    god: bool,
+    mode: &str,
+) -> Vec<Asteroid> {
+    let mut new_asteroids = Vec::new();
+    for asteroid in asteroids.iter_mut() {
+        if is_collided(asteroid, ship) && !god && mode != "spectator" {
+            ship.set_collided(true);
+        }
+        ship_bullet_vs_asteroid(ship, asteroid, &mut new_asteroids);
+    }
+    new_asteroids
+}
+
+fn ship_bullet_vs_asteroid(
+    ship: &mut Ship,
+    asteroid: &mut Asteroid,
+    new_asteroids: &mut Vec<Asteroid>,
+) {
+    for bullet in ship.bullets.iter_mut() {
+        if is_collided(asteroid, bullet) {
+            asteroid.set_collided(true);
+            bullet.set_collided(true);
+            if asteroid.sides() > 4 {
+                *new_asteroids = Asteroid::new_split(
+                    asteroid.pos(),
+                    bullet.vel().x,
+                    bullet.vel().y,
+                    asteroid.size(),
+                    asteroid.sides(),
+                );
+            }
+            break;
+        }
+    }
 }
