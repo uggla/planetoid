@@ -23,7 +23,7 @@ jobs:
       run: cargo build
     - name: Run clippy for target x86_64-unknown-linux-gnu
       working-directory: ./client
-      run: cargo build
+      run: cargo clippy
     - name: Run tests
       working-directory: ./client
       run: cargo test
@@ -32,3 +32,6 @@ jobs:
     - name: Build for target wasm32-unknown-unknown
       working-directory: ./client
       run: cargo build --target wasm32-unknown-unknown
+    - name: Run clippy for target wasm32-unknown-unknown
+      working-directory: ./client
+      run: cargo clippy --target wasm32-unknown-unknown
