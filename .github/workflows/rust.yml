@@ -23,7 +23,7 @@ jobs:
       run: cargo build
     - name: Run clippy for target x86_64-unknown-linux-gnu
       working-directory: ./client
-      run: cargo clippy
+      run: cargo clippy >clippy.output 2>&1 ; cat clippy.output ;! egrep -q "warning|error" clippy.output
     - name: Run tests
       working-directory: ./client
       run: cargo test
@@ -34,4 +34,4 @@ jobs:
       run: cargo build --target wasm32-unknown-unknown
     - name: Run clippy for target wasm32-unknown-unknown
       working-directory: ./client
-      run: cargo clippy --target wasm32-unknown-unknown
+      run: cargo clippy --target wasm32-unknown-unknown >clippy.output 2>&1 ; cat clippy.output ;! egrep -q "warning|error" clippy.output
