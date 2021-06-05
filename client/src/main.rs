@@ -1,23 +1,24 @@
 mod asteroid;
 mod bullet;
 mod collision;
+mod gameover;
 #[cfg(not(target_arch = "wasm32"))]
 mod network;
 mod screen;
 mod ship;
 #[cfg(not(target_arch = "wasm32"))]
 use crate::network::{connect_stream, connect_ws, deserialize_host_data, serialize_host_data};
-use crate::ship::Ship;
 use crate::{asteroid::Asteroid, collision::manage_collisions};
+use crate::{gameover::manage_gameover, ship::Ship};
 use macroquad::prelude::*;
 #[cfg(not(target_arch = "wasm32"))]
 use simple_logger::SimpleLogger;
-use std::{net::TcpStream, thread::sleep, time::Duration};
 #[cfg(not(target_arch = "wasm32"))]
-use std::{sync::mpsc, thread};
+use std::{net::TcpStream, sync::mpsc, thread, thread::sleep, time::Duration};
 use structopt::StructOpt;
 #[cfg(not(target_arch = "wasm32"))]
 use tungstenite::Message;
+#[cfg(not(target_arch = "wasm32"))]
 use url::Url;
 
 #[derive(StructOpt, Debug)]
@@ -53,6 +54,8 @@ struct Opt {
     name: String,
 }
 
+const MAX_ASTEROIDS: u8 = 10;
+
 fn window_conf() -> Conf {
     Conf {
         window_title: String::from("Planetoid"),
@@ -68,6 +71,7 @@ fn window_conf() -> Conf {
 async fn main() {
     let opt = Opt::from_args();
 
+    #[cfg(not(target_arch = "wasm32"))]
     let log_level = match opt.debug {
         0 => log::LevelFilter::Error,
         1 => log::LevelFilter::Info,
@@ -81,7 +85,6 @@ async fn main() {
     log::debug!("{:#?}", opt);
     log::info!("Starting game.");
 
-    const MAX_ASTEROIDS: u8 = 10;
     let mut gameover = false;
     let mut last_shot = get_time();
     let mut players: Vec<Ship> = Vec::new();
@@ -176,33 +179,14 @@ async fn main() {
         }
 
         if gameover {
-            clear_background(LIGHTGRAY);
-            let mut text = "You Win!. Press [enter] to play again.";
-            let font_size = 30.;
-
-            if !asteroids.is_empty() {
-                text = "Game Over. Press [enter] to play again.";
-            }
-
-            let text_size = measure_text(text, None, font_size as _, 1.0);
-            draw_text(
-                text,
-                screen_width() / 2. - text_size.width / 2.,
-                screen_height() / 2. - text_size.height / 2.,
-                font_size,
-                DARKGRAY,
+            manage_gameover(
+                &mut players,
+                &mut asteroids,
+                &opt.mode,
+                &opt.name,
+                &mut frame_count,
+                &mut gameover,
             );
-            if opt.mode != "spectator" && is_key_down(KeyCode::Enter) {
-                log::info!("Restarting game.");
-                players.clear();
-                players.push(Ship::new(String::from(&opt.name)));
-                asteroids = Vec::new();
-                gameover = false;
-                for _ in 0..MAX_ASTEROIDS {
-                    asteroids.push(Asteroid::new());
-                }
-                frame_count = 0;
-            }
 
             if is_key_down(KeyCode::Escape) {
                 break;

@@ -21,17 +21,7 @@ pub fn manage_collisions(
     let mut opponents = players.clone();
     for ship in players.iter_mut() {
         let mut new_asteroids = ship_vs_asteroids(ship, asteroids, god, mode);
-
-        for opponent in opponents.iter_mut() {
-            if opponent.name() != ship.name() {
-                for bullet in ship.bullets.iter_mut() {
-                    if is_collided(opponent, bullet) {
-                        bullet.set_collided(true);
-                        opponent.set_collided(true);
-                    }
-                }
-            }
-        }
+        ship_vs_opponents(ship, &mut opponents);
 
         ship.bullets
             .retain(|bullet| bullet.shot_at() + 1.5 > frame_t && !bullet.collided());
@@ -83,6 +73,29 @@ fn ship_bullet_vs_asteroid(
                 );
             }
             break;
+        }
+    }
+}
+
+fn ship_vs_opponents(ship: &mut Ship, opponents: &mut Vec<Ship>) {
+    for opponent in opponents.iter_mut() {
+        if opponent.name() != ship.name() {
+            // for bullet in ship.bullets.iter_mut() {
+            //     if is_collided(opponent, bullet) {
+            //         bullet.set_collided(true);
+            //         opponent.set_collided(true);
+            //     }
+            // }
+            ship_bullet_vs_opponents(ship, opponent);
+        }
+    }
+}
+
+fn ship_bullet_vs_opponents(ship: &mut Ship, opponent: &mut Ship) {
+    for bullet in ship.bullets.iter_mut() {
+        if is_collided(opponent, bullet) {
+            bullet.set_collided(true);
+            opponent.set_collided(true);
         }
     }
 }
