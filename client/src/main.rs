@@ -67,18 +67,23 @@ fn window_conf() -> Conf {
     }
 }
 
-#[macroquad::main(window_conf)]
-async fn main() {
-    let opt = Opt::from_args();
-
-    #[cfg(not(target_arch = "wasm32"))]
-    let log_level = match opt.debug {
+#[cfg(not(target_arch = "wasm32"))]
+fn get_log_level(debug_occurence: u8) -> log::LevelFilter {
+    match debug_occurence {
         0 => log::LevelFilter::Error,
         1 => log::LevelFilter::Info,
         2 => log::LevelFilter::Debug,
         3 => log::LevelFilter::Trace,
         _ => log::LevelFilter::Trace,
-    };
+    }
+}
+
+#[macroquad::main(window_conf)]
+async fn main() {
+    let opt = Opt::from_args();
+
+    #[cfg(not(target_arch = "wasm32"))]
+    let log_level = get_log_level(opt.debug);
 
     #[cfg(not(target_arch = "wasm32"))]
     SimpleLogger::new().with_level(log_level).init().unwrap();
@@ -89,6 +94,7 @@ async fn main() {
     let mut last_shot = get_time();
     let mut players: Vec<Ship> = Vec::new();
     players.push(Ship::new(String::from(&opt.name)));
+    // Temporary stuff for debugging
     players.push(Ship::new(String::from("Player 2")));
     players.push(Ship::new(String::from("Player 3")));
     players.push(Ship::new(String::from("Player 4")));
