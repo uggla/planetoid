@@ -8,7 +8,7 @@ mod screen;
 mod ship;
 #[cfg(not(target_arch = "wasm32"))]
 use crate::network::{connect_stream, connect_ws, deserialize_host_data, serialize_host_data};
-use crate::{asteroid::Asteroid, collision::manage_collisions};
+use crate::{asteroid::Asteroid, collision::manage_collisions, network::serialize_guest_data};
 use crate::{gameover::manage_gameover, ship::Ship};
 use macroquad::prelude::*;
 #[cfg(not(target_arch = "wasm32"))]
@@ -91,13 +91,14 @@ async fn main() {
     log::info!("Starting game.");
 
     let mut gameover = false;
+    let mut host_msg_received: bool = false;
     let mut last_shot = get_time();
     let mut players: Vec<Ship> = Vec::new();
     players.push(Ship::new(String::from(&opt.name)));
     // Temporary stuff for debugging
-    players.push(Ship::new(String::from("Player 2")));
-    players.push(Ship::new(String::from("Player 3")));
-    players.push(Ship::new(String::from("Player 4")));
+    // players.push(Ship::new(String::from("Player 2")));
+    // players.push(Ship::new(String::from("Player 3")));
+    // players.push(Ship::new(String::from("Player 4")));
 
     let mut asteroids = Vec::new();
 
@@ -143,10 +144,23 @@ async fn main() {
             log::info!("Waiting synchronization data");
             loop {
                 let msg = rx_from_socket.recv().unwrap();
-                deserialize_host_data(&opt.mode, msg, &mut asteroids, &mut players, &mut gameover);
+                deserialize_host_data(
+                    &opt.name,
+                    &opt.mode,
+                    msg,
+                    &mut asteroids,
+                    &mut players,
+                    &mut gameover,
+                    &mut host_msg_received,
+                );
                 if !asteroids.is_empty() {
                     break;
                 }
+            }
+            if opt.mode == "guest" {
+                tx_to_socket
+                    .send(format!("Hello from {}", opt.name))
+                    .unwrap();
             }
         }
     }
@@ -159,11 +173,13 @@ async fn main() {
             let _received = match rx_from_socket.try_recv() {
                 Ok(msg) => {
                     deserialize_host_data(
+                        &opt.name,
                         &opt.mode,
                         msg,
                         &mut asteroids,
                         &mut players,
                         &mut gameover,
+                        &mut host_msg_received,
                     );
                 }
                 Err(mpsc::TryRecvError::Empty) => (),
@@ -179,8 +195,20 @@ async fn main() {
                             &mut gameover,
                         ))
                         .unwrap();
+                    frame_count = 0;
                 }
-                frame_count = 0;
+            }
+
+            if host_msg_received {
+                if opt.mode == "guest" {
+                    for ship in players.iter_mut() {
+                        if ship.name() == opt.name {
+                            tx_to_socket.send(serialize_guest_data(ship)).unwrap();
+                        }
+                    }
+                    host_msg_received = false;
+                    // frame_count = 0;
+                }
             }
         }
 
@@ -256,7 +284,9 @@ async fn main() {
             asteroid.update_pos();
         }
 
+        // if opt.mode == "host" {
         manage_collisions(&mut players, &mut asteroids, opt.god, &opt.mode, frame_t);
+        // }
 
         if asteroids.is_empty() || players.is_empty() {
             gameover = true;

@@ -1,4 +1,4 @@
-use crate::{asteroid::Asteroid, ship::Ship};
+use crate::{asteroid::Asteroid, collision::Collided, ship::Ship};
 use serde::{Deserialize, Serialize};
 use std::{
     error::Error,
@@ -45,25 +45,67 @@ struct GameData {
 }
 
 pub fn deserialize_host_data(
+    name: &str,
     mode: &str,
     msg: Message,
     asteroids: &mut Vec<Asteroid>,
     players: &mut Vec<Ship>,
     gameover: &mut bool,
+    host_msg_received: &mut bool,
 ) {
     if let Message::Text(msg) = msg {
-        // Uggly hack to manage msg
-        if !msg.contains("joined") {
-            log::debug!("{}", msg);
+        log::debug!("{}", msg);
+        if mode == "host" {
+            if msg.contains("Hello from ") {
+                let name = msg.strip_prefix("Hello from ").unwrap();
+                players.push(Ship::new(String::from(name)));
+            }
 
-            if mode != "host" {
+            if msg.contains("GuestData: ") {
+                let msg = msg.strip_prefix("GuestData: ").unwrap();
+                let opponent: Ship = serde_json::from_str(&msg).unwrap();
+                for ship in players.iter_mut() {
+                    if ship.name() == opponent.name() {
+                        *ship = opponent.clone();
+                    }
+                }
+            }
+        }
+
+        if mode != "host" {
+            if msg.contains("GameData: ") {
+                let msg = msg.strip_prefix("GameData: ").unwrap();
+
                 asteroids.clear();
 
-                // ship.clear();
+                let mut current_ship: Ship = Ship::new(name.to_string());
+                for ship in players.clone() {
+                    if ship.name() == name {
+                        current_ship = ship;
+                    }
+                }
+
                 let gamedata: GameData = serde_json::from_str(&msg).unwrap();
                 *asteroids = gamedata.asteroids;
-                *players = gamedata.players;
                 *gameover = gamedata.gameover;
+                // for ship_index in 0..players.len() {
+                //     if players[ship_index].name() != name {
+                //         players[ship_index] = gamedata.players[ship_index].clone();
+                *players = gamedata.players;
+                // }
+                // }
+                for ship in players {
+                    if ship.name() == name {
+                        // ship.set_pos(current_ship.pos());
+                        // ship.set_vel(current_ship.vel());
+                        // ship.set_acc(current_ship.acc());
+                        // ship.set_rot(current_ship.rot());
+                        // ship.set_size(current_ship.size());
+                        // ship.set_collided(current_ship.collided());
+                        *ship = current_ship.clone();
+                    }
+                }
+                *host_msg_received = true;
             }
         }
     }
@@ -80,5 +122,9 @@ pub fn serialize_host_data(
         gameover: *gameover,
     };
 
-    serde_json::to_string(&gamedata).unwrap()
+    format!("GameData: {}", serde_json::to_string(&gamedata).unwrap())
+}
+
+pub fn serialize_guest_data(ship: &Ship) -> String {
+    format!("GuestData: {}", serde_json::to_string(ship).unwrap())
 }
