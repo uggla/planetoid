@@ -53,6 +53,7 @@ struct Opt {
     solo: bool,
 
     /// Player name
+    #[structopt(short, long, default_value = "planetoid")]
     name: String,
 }
 
