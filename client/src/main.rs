@@ -300,12 +300,16 @@ async fn main() {
         clear_background(LIGHTGRAY);
         for ship in &players {
             for bullet in ship.bullets.iter() {
-                bullet.draw();
+                if !bullet.collided() {
+                    bullet.draw();
+                }
             }
         }
 
         for asteroid in asteroids.iter() {
-            asteroid.draw();
+            if !asteroid.collided() {
+                asteroid.draw();
+            }
         }
 
         for ship in &players {
