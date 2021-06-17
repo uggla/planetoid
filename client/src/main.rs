@@ -64,6 +64,7 @@ fn window_conf() -> Conf {
         fullscreen: false,
         window_width: 1024,
         window_height: 768,
+        window_resizable: false,
 
         ..Default::default()
     }
