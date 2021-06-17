@@ -23,9 +23,12 @@ pub fn manage_collisions(
         let mut new_asteroids = ship_vs_asteroids(ship, asteroids, god, mode);
         ship_vs_opponents(ship, &mut opponents);
 
+        // if mode == "host" {
         ship.bullets
-            .retain(|bullet| bullet.shot_at() + 1.5 > frame_t && !bullet.collided());
+            // .retain(|bullet| bullet.shot_at() + 1.5 > frame_t && !bullet.collided());
+            .retain(|bullet| bullet.shot_at() + 1.5 > frame_t);
         asteroids.retain(|asteroid| !asteroid.collided());
+        // }
         asteroids.append(&mut new_asteroids);
     }
 
