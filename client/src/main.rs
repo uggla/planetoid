@@ -7,8 +7,10 @@ mod network;
 mod screen;
 mod ship;
 #[cfg(not(target_arch = "wasm32"))]
-use crate::network::{connect_stream, connect_ws, deserialize_host_data, serialize_host_data};
-use crate::{asteroid::Asteroid, collision::manage_collisions, network::serialize_guest_data};
+use crate::network::{
+    connect_stream, connect_ws, deserialize_host_data, serialize_guest_data, serialize_host_data,
+};
+use crate::{asteroid::Asteroid, collision::manage_collisions};
 use crate::{gameover::manage_gameover, ship::Ship};
 use macroquad::prelude::*;
 #[cfg(not(target_arch = "wasm32"))]
@@ -93,6 +95,7 @@ async fn main() {
     let mut gameover = false;
     let mut host_msg_received: bool = false;
     let mut last_shot = get_time();
+    let mut sync_t = get_time();
     let mut players: Vec<Ship> = Vec::new();
     players.push(Ship::new(String::from(&opt.name)));
     // Temporary stuff for debugging
@@ -152,6 +155,7 @@ async fn main() {
                     &mut players,
                     &mut gameover,
                     &mut host_msg_received,
+                    &mut sync_t,
                 );
                 if !asteroids.is_empty() {
                     break;
@@ -180,6 +184,7 @@ async fn main() {
                         &mut players,
                         &mut gameover,
                         &mut host_msg_received,
+                        &mut sync_t,
                     );
                 }
                 Err(mpsc::TryRecvError::Empty) => (),

@@ -1,4 +1,5 @@
 use crate::{asteroid::Asteroid, collision::Collided, ship::Ship};
+use macroquad::prelude::get_time;
 use serde::{Deserialize, Serialize};
 use std::{
     error::Error,
@@ -52,15 +53,17 @@ pub fn deserialize_host_data(
     players: &mut Vec<Ship>,
     gameover: &mut bool,
     host_msg_received: &mut bool,
+    sync_t: &mut f64,
 ) {
     if let Message::Text(msg) = msg {
         log::debug!("{}", msg);
-        if mode == "host" {
-            if msg.contains("Hello from ") {
-                let name = msg.strip_prefix("Hello from ").unwrap();
-                players.push(Ship::new(String::from(name)));
-            }
+        if msg.contains("Hello from ") {
+            let name = msg.strip_prefix("Hello from ").unwrap();
+            players.push(Ship::new(String::from(name)));
+            *sync_t = get_time();
+        }
 
+        if mode == "host" {
             if msg.contains("GuestData: ") {
                 let msg = msg.strip_prefix("GuestData: ").unwrap();
                 let opponent: Ship = serde_json::from_str(&msg).unwrap();
