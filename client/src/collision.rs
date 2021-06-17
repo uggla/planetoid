@@ -63,7 +63,7 @@ fn ship_bullet_vs_asteroid(
     new_asteroids: &mut Vec<Asteroid>,
 ) {
     for bullet in ship.bullets.iter_mut() {
-        if is_collided(asteroid, bullet) {
+        if !bullet.collided() && !asteroid.collided() && is_collided(asteroid, bullet) {
             asteroid.set_collided(true);
             bullet.set_collided(true);
             if asteroid.sides() > 4 {
