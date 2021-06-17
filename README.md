@@ -2,10 +2,13 @@
 
 Planetoid is a toy project to demonstrate and learn several technologies.
 The goal is to create a little multiplayer [asteriod](https://en.wikipedia.org/wiki/Asteroids_(video_game)) game clone.
-* Server side is a [Quarkus](https://quarkus.io/) application using websockets derived from the chat example. The goal of this application is currently to:
-  * Pass game messages between clients.
-  * Show games in progress and terminated with participants and winner.
-  * Allow users to authenticate and add comments to a specific game.
+* Server side is composed with 2 parts:
+    * A server based on a [Quarkus](https://quarkus.io/) application. The goal of this application will be to:
+      * Show games in progress and terminated with participants and winner.
+      * Allow users to authenticate and add comments to a specific game.
+      * Launch workers to allow several games in parallel each with individual players.
+    * A worker based on a [Quarkus](https://quarkus.io/) application using websockets derived from the chat example. The goal of this application is currently to:
+      * Pass game messages between clients.
 * Client side is a [Rust](https://www.rust-lang.org/) application using [macroquad](https://github.com/not-fl3/macroquad) framework. As well, it was derived from the asteroid example, but refactored in a more object oriented code. It can be compiled as:
     * A native application that will use websockets ([tungstenite](https://github.com/snapview/tungstenite-rs)) to share game data. Only Linux has been fully tested so far, but it should run on Windows/MacOs as well.
     * A wasm32 application, that can be run in a browser. Currently websockets are not implemented, but the game can be played in solo mode.
@@ -63,10 +66,10 @@ Ex on Fedora
   dnf install maven
 ```
 
-3. Go to the server directory and run the server in dev mode
+3. Go to the worker directory and run the worker in dev mode
 
 ```bash
-cd server
+cd worker
 mvn compile quarkus:dev
 ```
 *Note: maven will download a lot of dependencies from the internet*
