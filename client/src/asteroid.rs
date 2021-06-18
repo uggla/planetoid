@@ -6,6 +6,28 @@ use serde::ser::{SerializeStruct, Serializer};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
+pub struct Asteroids {
+    name: String,
+    count: usize,
+    asteroids: Vec<Asteroid>,
+}
+
+impl Asteroids {
+    fn generate_field(name: String, number: usize) -> Self {
+        let mut asteroids = Vec::new();
+        for _item in 0..number {
+            let asteroid = Asteroid::new();
+            asteroids.push(asteroid);
+        }
+
+        Self {
+            name,
+            count: number,
+            asteroids,
+        }
+    }
+}
+
 pub struct Asteroid {
     pos: Vec2,
     vel: Vec2,
@@ -282,6 +304,17 @@ mod tests {
 
     use super::*;
 
+    fn window_conf() -> Conf {
+        Conf {
+            window_title: String::from("Planetoid"),
+            fullscreen: false,
+            window_width: 1024,
+            window_height: 768,
+            window_resizable: false,
+            ..Default::default()
+        }
+    }
+
     #[test]
     fn asteroid_serialize_deserialize_test() {
         let asteroid = Asteroid {
@@ -310,7 +343,10 @@ mod tests {
 
     #[test]
     fn gen_rand_test() {
-        //rand::srand(12345);
+        // This is not a real test just a snippet to check how the quad-rand crate is working
+        // If the random generator is feed with the same seed, it gives random numbers, but the
+        // numbers are the same between 2 runs.
+        // Using the UNIX_EPOCH as the seed avoid to use the same seed between runs.
         rand::srand(
             SystemTime::now()
                 .duration_since(SystemTime::UNIX_EPOCH)
@@ -322,5 +358,16 @@ mod tests {
             dbg!(rand::rand());
         }
         dbg!(rand::rand());
+    }
+
+    #[test]
+    fn generate_field_test() {
+        async fn amain() {
+            let field = Asteroids::generate_field("planetoid".to_string(), 3);
+            assert_eq!(field.name, "planetoid".to_string());
+            assert_eq!(field.count, 3);
+            assert_eq!(field.asteroids.len(), 3);
+        }
+        macroquad::Window::from_config(window_conf(), amain());
     }
 }
