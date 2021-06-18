@@ -7,7 +7,7 @@
 #
 # Then, build the image with:
 #
-# docker build -f src/main/docker/Dockerfile.jvm -t quarkus/planetoid-jvm .
+# docker build -f src/fr/docker/Dockerfile.jvm -t quarkus/planetoid-jvm .
 #
 # Then run the container using:
 #

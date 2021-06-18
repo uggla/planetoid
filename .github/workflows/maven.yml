@@ -21,6 +21,9 @@ jobs:
       with:
         java-version: '11'
         distribution: 'adopt'
+    - name: Build server with Maven
+      working-directory: ./server
+      run: mvn -B package --file pom.xml
     - name: Build worker with Maven
       working-directory: ./worker
       run: mvn -B package --file pom.xml

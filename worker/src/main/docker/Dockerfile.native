@@ -7,7 +7,7 @@
 #
 # Then, build the image with:
 #
-# docker build -f src/main/docker/Dockerfile.native -t quarkus/planetoid .
+# docker build -f src/fr/docker/Dockerfile.native -t quarkus/planetoid .
 #
 # Then run the container using:
 #
