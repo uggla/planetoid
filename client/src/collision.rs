@@ -73,6 +73,7 @@ fn ship_bullet_vs_asteroid(
                     bullet.vel().y,
                     asteroid.size(),
                     asteroid.sides(),
+                    asteroid.last_updated(),
                 );
             }
             break;

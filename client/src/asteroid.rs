@@ -36,6 +36,7 @@ pub struct Asteroid {
     size: f32,
     sides: u8,
     collided: bool,
+    last_updated: f64,
 }
 
 impl Asteroid {
@@ -51,10 +52,18 @@ impl Asteroid {
             size: screen_width().min(screen_height()) / 10.,
             sides: 8,
             collided: false,
+            last_updated: 0.,
         }
     }
 
-    pub fn new_split(pos: Vec2, velx: f32, vely: f32, size: f32, sides: u8) -> Vec<Asteroid> {
+    pub fn new_split(
+        pos: Vec2,
+        velx: f32,
+        vely: f32,
+        size: f32,
+        sides: u8,
+        last_updated: f64,
+    ) -> Vec<Asteroid> {
         let mut new_asteroids = Vec::new();
 
         let asteroid1 = Self {
@@ -65,6 +74,7 @@ impl Asteroid {
             size: size * 0.8,
             sides: sides - 1,
             collided: false,
+            last_updated,
         };
 
         let asteroid2 = Self {
@@ -75,6 +85,7 @@ impl Asteroid {
             size: size * 0.8,
             sides: sides - 1,
             collided: false,
+            last_updated,
         };
 
         new_asteroids.push(asteroid1);
@@ -105,6 +116,14 @@ impl Asteroid {
     pub fn set_collided(&mut self, collided: bool) {
         self.collided = collided;
     }
+
+    pub fn last_updated(&self) -> f64 {
+        self.last_updated
+    }
+
+    pub fn set_last_updated(&mut self, last_updated: f64) {
+        self.last_updated = last_updated;
+    }
 }
 
 impl Collided for Asteroid {
@@ -122,7 +141,7 @@ impl Serialize for Asteroid {
     where
         S: Serializer,
     {
-        let mut state = serializer.serialize_struct("Asteroid", 7)?;
+        let mut state = serializer.serialize_struct("Asteroid", 8)?;
         state.serialize_field("pos", &vec![&self.pos[0], &self.pos[1]])?;
         state.serialize_field("vel", &vec![&self.vel[0], &self.vel[1]])?;
         state.serialize_field("rot", &self.rot)?;
@@ -130,6 +149,7 @@ impl Serialize for Asteroid {
         state.serialize_field("size", &self.size)?;
         state.serialize_field("sides", &self.sides)?;
         state.serialize_field("collided", &self.collided)?;
+        state.serialize_field("last_updated", &self.last_updated)?;
         state.end()
     }
 }
@@ -147,6 +167,7 @@ impl<'de> Deserialize<'de> for Asteroid {
             Size,
             Sides,
             Collided,
+            LastUpdated,
         }
 
         impl<'de> Deserialize<'de> for Field {
@@ -161,7 +182,7 @@ impl<'de> Deserialize<'de> for Asteroid {
 
                     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
                         formatter.write_str(
-                            "`pos`, `vel`, `rot`, `rot_speed`, `size`, `sides` or `collided`",
+                            "`pos`, `vel`, `rot`, `rot_speed`, `size`, `sides`, `collided` or `last_updated`",
                         )
                     }
 
@@ -177,6 +198,7 @@ impl<'de> Deserialize<'de> for Asteroid {
                             "size" => Ok(Field::Size),
                             "sides" => Ok(Field::Sides),
                             "collided" => Ok(Field::Collided),
+                            "last_updated" => Ok(Field::LastUpdated),
                             _ => Err(de::Error::unknown_field(value, FIELDS)),
                         }
                     }
@@ -206,6 +228,7 @@ impl<'de> Deserialize<'de> for Asteroid {
                 let mut size = None;
                 let mut sides = None;
                 let mut collided = None;
+                let mut last_updated = None;
                 while let Some(key) = map.next_key()? {
                     match key {
                         Field::Pos => {
@@ -250,6 +273,12 @@ impl<'de> Deserialize<'de> for Asteroid {
                             }
                             collided = Some(map.next_value()?);
                         }
+                        Field::LastUpdated => {
+                            if last_updated.is_some() {
+                                return Err(de::Error::duplicate_field("last_updated"));
+                            }
+                            last_updated = Some(map.next_value()?);
+                        }
                     }
                 }
                 let pos = pos.ok_or_else(|| de::Error::missing_field("pos"))?;
@@ -259,6 +288,8 @@ impl<'de> Deserialize<'de> for Asteroid {
                 let size = size.ok_or_else(|| de::Error::missing_field("size"))?;
                 let sides = sides.ok_or_else(|| de::Error::missing_field("sides"))?;
                 let collided = collided.ok_or_else(|| de::Error::missing_field("collided"))?;
+                let last_updated =
+                    last_updated.ok_or_else(|| de::Error::missing_field("last_updated"))?;
                 Ok(Asteroid {
                     pos: Vec2::new(pos[0], pos[1]),
                     vel: Vec2::new(vel[0], vel[1]),
@@ -267,6 +298,7 @@ impl<'de> Deserialize<'de> for Asteroid {
                     size,
                     sides,
                     collided,
+                    last_updated,
                 })
             }
         }
@@ -279,6 +311,7 @@ impl<'de> Deserialize<'de> for Asteroid {
             "size",
             "sides",
             "collided",
+            "last_updated",
         ];
         deserializer.deserialize_struct("Asteroid", FIELDS, AsteroidVisitor)
     }
@@ -294,6 +327,7 @@ impl Clone for Asteroid {
             size: self.size,
             sides: self.sides,
             collided: self.collided,
+            last_updated: self.last_updated,
         }
     }
 }
@@ -325,6 +359,7 @@ mod tests {
             size: 1.,
             sides: 8,
             collided: false,
+            last_updated: 0.,
         };
         let serialize = serde_json::to_string(&asteroid).unwrap();
         dbg!(&serialize);
@@ -339,6 +374,7 @@ mod tests {
         assert_eq!(asteroid.size, deserialize.size);
         assert_eq!(asteroid.sides, deserialize.sides);
         assert_eq!(asteroid.collided, deserialize.collided);
+        assert_eq!(asteroid.last_updated, deserialize.last_updated);
     }
 
     #[test]
