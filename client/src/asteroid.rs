@@ -278,6 +278,8 @@ impl Clone for Asteroid {
 
 #[cfg(test)]
 mod tests {
+    use std::time::SystemTime;
+
     use super::*;
 
     #[test]
@@ -304,5 +306,21 @@ mod tests {
         assert_eq!(asteroid.size, deserialize.size);
         assert_eq!(asteroid.sides, deserialize.sides);
         assert_eq!(asteroid.collided, deserialize.collided);
+    }
+
+    #[test]
+    fn gen_rand_test() {
+        //rand::srand(12345);
+        rand::srand(
+            SystemTime::now()
+                .duration_since(SystemTime::UNIX_EPOCH)
+                .unwrap()
+                .as_secs(),
+        );
+
+        for _i in 0..10 {
+            dbg!(rand::rand());
+        }
+        dbg!(rand::rand());
     }
 }
