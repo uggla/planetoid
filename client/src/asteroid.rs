@@ -4,28 +4,49 @@ use macroquad::prelude::*;
 use serde::de::{self, Deserializer, MapAccess, Visitor};
 use serde::ser::{SerializeStruct, Serializer};
 use serde::{Deserialize, Serialize};
+use std::cmp::Ordering;
+use std::collections::HashMap;
 use std::fmt;
 
 pub struct Asteroids {
-    name: String,
     count: usize,
-    asteroids: Vec<Asteroid>,
+    asteroids: HashMap<String, Asteroid>,
 }
 
 impl Asteroids {
     fn generate_field(name: String, number: usize) -> Self {
-        let mut asteroids = Vec::new();
-        for _item in 0..number {
+        let mut asteroids = HashMap::new();
+        for item in 0..number {
             let asteroid = Asteroid::new();
-            asteroids.push(asteroid);
+            asteroids.insert(format!("{}_{}", name, item), asteroid);
         }
 
         Self {
-            name,
             count: number,
             asteroids,
         }
     }
+
+    fn add_asteroid(&mut self, name: String, asteroid: Asteroid) {
+        self.count += 1;
+        self.asteroids
+            .insert(format!("{}_{}", name, self.count), asteroid);
+    }
+}
+
+fn synchronize_asteroids(
+    field1: &mut Asteroids,
+    field2: Asteroids,
+    name_field2: String,
+) -> &mut Asteroids {
+    for (key_field2, value_field2) in &field2.asteroids {
+        match field1.asteroids.get(key_field2) {
+            None => field1.add_asteroid(name_field2.clone(), value_field2.clone()),
+
+            Some(key_field2) => println!("r"),
+        }
+    }
+    field1
 }
 
 pub struct Asteroid {
@@ -50,6 +71,19 @@ impl Asteroid {
             rot: 0.,
             rot_speed: rand::gen_range(-2., 2.),
             size: screen_width().min(screen_height()) / 10.,
+            sides: 8,
+            collided: false,
+            last_updated: 0.,
+        }
+    }
+
+    pub fn new_pos_and_size(x: f32, y: f32, size: f32) -> Self {
+        Self {
+            pos: Vec2::new(x, y),
+            vel: Vec2::new(rand::gen_range(-1., 1.), rand::gen_range(-1., 1.)),
+            rot: 0.,
+            rot_speed: rand::gen_range(-2., 2.),
+            size,
             sides: 8,
             collided: false,
             last_updated: 0.,
@@ -332,6 +366,18 @@ impl Clone for Asteroid {
     }
 }
 
+impl PartialOrd for Asteroid {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        self.last_updated.partial_cmp(&other.last_updated)
+    }
+}
+
+impl PartialEq for Asteroid {
+    fn eq(&self, other: &Self) -> bool {
+        self.last_updated == other.last_updated
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::time::SystemTime;
@@ -397,12 +443,122 @@ mod tests {
     }
 
     #[test]
-    fn generate_field_test() {
+    fn compare_asteroid_test() {
+        let mut asteroid1 = Asteroid::new_pos_and_size(0., 0., 10.);
+        let mut asteroid2 = Asteroid::new_pos_and_size(0., 0., 10.);
+        asteroid1.set_last_updated(0.0);
+        asteroid2.set_last_updated(2.0);
+        assert!(asteroid1 < asteroid2);
+        asteroid1.set_last_updated(3.0);
+        asteroid2.set_last_updated(2.0);
+        assert!(asteroid1 > asteroid2);
+        asteroid1.set_last_updated(3.0);
+        asteroid2.set_last_updated(3.0);
+        assert!(asteroid1 == asteroid2);
+    }
+
+    #[test]
+    fn asteroid_synchronize_1_test() {
+        let mut asteroid1 = Asteroid::new_pos_and_size(0., 0., 10.);
+        let mut asteroid2 = Asteroid::new_pos_and_size(0., 0., 10.);
+        asteroid1.set_last_updated(0.0);
+        asteroid2.set_last_updated(2.0);
+
+        let asteroids = HashMap::new();
+        let asteroids_c = asteroids.clone();
+
+        let mut field1 = Asteroids {
+            count: 0,
+            asteroids,
+        };
+
+        let mut field2 = Asteroids {
+            count: 0,
+            asteroids: asteroids_c,
+        };
+
+        field1.add_asteroid("f1".to_string(), asteroid1.clone());
+        field1.add_asteroid("f1".to_string(), asteroid2.clone());
+        field2.add_asteroid("f1".to_string(), asteroid1.clone());
+        field2.add_asteroid("f1".to_string(), asteroid2.clone());
+
+        let asteroids = synchronize_asteroids(&mut field1, field2, "f2".to_string());
+        assert!(asteroids.asteroids.get("f1_1").unwrap() == &asteroid1);
+        assert!(asteroids.asteroids.get("f1_2").unwrap() == &asteroid2);
+    }
+
+    #[test]
+    fn asteroid_synchronize_2_test() {
+        let mut asteroid1 = Asteroid::new_pos_and_size(0., 0., 10.);
+        let mut asteroid2 = Asteroid::new_pos_and_size(0., 0., 10.);
+        asteroid1.set_last_updated(0.0);
+        asteroid2.set_last_updated(2.0);
+
+        let asteroids = HashMap::new();
+        let asteroids_c = asteroids.clone();
+
+        let mut field1 = Asteroids {
+            count: 0,
+            asteroids,
+        };
+
+        let mut field2 = Asteroids {
+            count: 0,
+            asteroids: asteroids_c,
+        };
+
+        field1.add_asteroid("f1".to_string(), asteroid1.clone());
+        field2.add_asteroid("f1".to_string(), asteroid1.clone());
+        field2.add_asteroid("f1".to_string(), asteroid2.clone());
+
+        let asteroids = synchronize_asteroids(&mut field1, field2, "f2".to_string());
+        assert!(asteroids.asteroids.get("f1_1").unwrap() == &asteroid1);
+        assert!(asteroids.asteroids.get("f2_2").unwrap() == &asteroid2);
+    }
+
+    #[test]
+    fn asteroid_synchronize_3_test() {
+        let mut asteroid1 = Asteroid::new_pos_and_size(0., 0., 10.);
+        let mut asteroid2 = Asteroid::new_pos_and_size(0., 0., 10.);
+        let mut asteroid3 = Asteroid::new_pos_and_size(0., 0., 10.);
+        asteroid1.set_last_updated(0.0);
+        asteroid2.set_last_updated(2.0);
+        asteroid3.set_last_updated(3.0);
+
+        let asteroids = HashMap::new();
+        let asteroids_c = asteroids.clone();
+
+        let mut field1 = Asteroids {
+            count: 0,
+            asteroids,
+        };
+
+        let mut field2 = Asteroids {
+            count: 0,
+            asteroids: asteroids_c,
+        };
+
+        field1.add_asteroid("f1".to_string(), asteroid1.clone());
+        field1.add_asteroid("f1".to_string(), asteroid2.clone());
+        field2.add_asteroid("f1".to_string(), asteroid1.clone());
+        field2.add_asteroid("f1".to_string(), asteroid3.clone());
+
+        let asteroids = synchronize_asteroids(&mut field1, field2, "f2".to_string());
+        assert!(asteroids.asteroids.get("f1_1").unwrap() == &asteroid1);
+        assert!(asteroids.asteroids.get("f2_2").unwrap() == &asteroid3);
+    }
+
+    #[test]
+    fn generate_field_nb_item_test() {
         async fn amain() {
             let field = Asteroids::generate_field("planetoid".to_string(), 3);
-            assert_eq!(field.name, "planetoid".to_string());
             assert_eq!(field.count, 3);
             assert_eq!(field.asteroids.len(), 3);
+
+            let field = Asteroids::generate_field("planetoid".to_string(), 3);
+            let mut keys: Vec<&String> = field.asteroids.keys().collect();
+            keys.sort();
+            assert_eq!(keys, ["planetoid_0", "planetoid_1", "planetoid_2"]);
         }
         macroquad::Window::from_config(window_conf(), amain());
     }
