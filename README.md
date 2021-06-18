@@ -51,7 +51,7 @@ Running the wasm application into Firefox:
   cd planetoid
 ```
 
-### Server
+### Worker
 
 1. Install OpenJDK 11 following the instructions [here](https://adoptopenjdk.net/installation.html#) or install it using your distribution package manager.
 Ex on Fedora
@@ -79,7 +79,7 @@ mvn compile quarkus:dev
 
 #### Native client
 1. Install Rust following the instructions [here](https://www.rust-lang.org/fr/learn/get-started).
-   
+
    *Tips: the rustup method is the simplest method.*
 
 2. Install required library for macroquad
@@ -97,7 +97,7 @@ dnf install libX11-devel libXi-devel mesa-libGL-devel alsa-lib-devel
 3. Go to the client directory and run the native client
 ```bash
 cd client
-cargo run -- Planetoid
+cargo run
 ```
 
 #### Wasm32 client
@@ -142,7 +142,7 @@ planetoid 0.1.0
 Planetoid is a asteroid clone
 
 USAGE:
-    planetoid [FLAGS] [OPTIONS] <name>
+    planetoid [FLAGS] [OPTIONS]
 
 FLAGS:
     -d, --debug      Debug mode (_ (error), -d (info), -dd (debug), -ddd (trace))
@@ -154,26 +154,26 @@ FLAGS:
 OPTIONS:
     -h, --host <host>    Host [default: localhost]
     -m, --mode <mode>    Network mode [default: host]  [possible values: host, guest, spectator]
+    -n, --name <name>    Player name [default: planetoid]
     -p, --port <port>    Port [default: 8080]
-
-ARGS:
-    <name>    Player name
 ```
+
 ### Examples
 #### Running in solo mode
-`cargo run -- -s Planetoid`
+`cargo run -- -s`
 
 #### Running in network mode with a spectator
 On the first terminal:
-`cargo run -- -m host Planetoid`
+`cargo run -- -m host -n Planetoid`
 
 On the second terminal:
-`cargo run -- -m spectator "Planetoid spectator"`
+`cargo run -- -m spectator -n "Planetoid spectator"`
 
 #### Running in network mode, debug and as god
 `-dd`: debug allow to see messages sent to the web socket.
 
 `-g`: god mode, ship cannot be destroyed.
 
-`cargo run -- -m host -dd -g Planetoid`
+`-n`: player name (default: planetoid)
 
+`cargo run -- -m host -dd -g -n Planetoid`
