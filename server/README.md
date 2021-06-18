@@ -62,3 +62,12 @@ REST is easy peasy with this Hello World RESTEasy resource.
 This example demonstrate RESTEasy JSON serialisation by letting you list, add and remove quark types from a list. Quarked!
 
 [Related guide section...](https://quarkus.io/guides/rest-json#creating-your-first-json-rest-service)
+
+
+## Curl commands
+```
+curl -H 'Content-Type:application/json' -v http://localhost:8080/players'
+curl -H 'Content-Type:application/json' -v -XPOST http://localhost:8080/players -d '{"name":"titi"}'
+curl -H 'Content-Type:application/json' -v -XPOST http://localhost:8080/games -d '{"gamedate":"2021-06-18"}'
+```
+
