@@ -43,7 +43,15 @@ fn synchronize_asteroids(
         match field1.asteroids.get(key_field2) {
             None => field1.add_asteroid(name_field2.clone(), value_field2.clone()),
 
-            Some(key_field2) => println!("r"),
+            Some(value_field1) => {
+                if value_field2.last_updated() > value_field1.last_updated() {
+                    field1
+                        .asteroids
+                        .get_mut(key_field2)
+                        .unwrap()
+                        .set_last_updated(value_field2.last_updated());
+                }
+            }
         }
     }
     field1
@@ -548,7 +556,42 @@ mod tests {
 
         let asteroids = synchronize_asteroids(&mut field1, field2, "f2".to_string());
         assert!(asteroids.asteroids.get("f1_0").unwrap() == &asteroid1);
-        assert!(asteroids.asteroids.get("f2_1").unwrap() == &asteroid3);
+        assert!(asteroids.asteroids.get("f1_1").unwrap() == &asteroid3);
+    }
+
+    /// Asteroid not updated in field2
+    #[test]
+    fn asteroid_synchronize_4_test() {
+        let mut asteroid1 = Asteroid::new_pos_and_size(0., 0., 10.);
+        let mut asteroid2 = Asteroid::new_pos_and_size(0., 0., 10.);
+        let mut asteroid3 = Asteroid::new_pos_and_size(0., 0., 10.);
+        asteroid1.set_last_updated(0.0);
+        asteroid2.set_last_updated(60.0);
+        asteroid3.set_last_updated(50.0);
+
+        let asteroids = HashMap::new();
+        let asteroids_c = asteroids.clone();
+
+        let mut field1 = Asteroids {
+            count: 0,
+            asteroids,
+        };
+
+        let mut field2 = Asteroids {
+            count: 0,
+            asteroids: asteroids_c,
+        };
+
+        field1.add_asteroid("f1".to_string(), asteroid1.clone());
+        field1.add_asteroid("f1".to_string(), asteroid2.clone());
+        field2.add_asteroid("f1".to_string(), asteroid1.clone());
+        field2.add_asteroid("f1".to_string(), asteroid3.clone());
+
+        let asteroids = synchronize_asteroids(&mut field1, field2, "f2".to_string());
+        assert!(asteroids.asteroids.get("f1_0").unwrap() == &asteroid1);
+        assert!(asteroids.asteroids.get("f1_1").unwrap() == &asteroid2);
+    }
+
     }
 
     #[test]
