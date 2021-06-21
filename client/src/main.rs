@@ -84,6 +84,9 @@ fn get_log_level(debug_occurence: u8) -> log::LevelFilter {
 
 #[macroquad::main(window_conf)]
 async fn main() {
+    // Seed random generator
+    rand::srand(miniquad::date::now() as u64);
+
     let opt = Opt::from_args();
 
     #[cfg(not(target_arch = "wasm32"))]
