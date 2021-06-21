@@ -32,6 +32,12 @@ impl Asteroids {
             .insert(format!("{}_{}", name, self.count), asteroid);
         self.count += 1;
     }
+
+    fn refresh_last_updated(&mut self, last_updated: f64) {
+        for asteroid in self.asteroids.values_mut() {
+            asteroid.set_last_updated(last_updated);
+        }
+    }
 }
 
 fn synchronize_asteroids(
@@ -592,6 +598,28 @@ mod tests {
         assert!(asteroids.asteroids.get("f1_1").unwrap() == &asteroid2);
     }
 
+    #[test]
+    fn asteroid_refresh_last_updated_test() {
+        let asteroid1 = Asteroid::new_pos_and_size(0., 0., 10.);
+        let asteroid2 = Asteroid::new_pos_and_size(0., 0., 10.);
+        let asteroid3 = Asteroid::new_pos_and_size(0., 0., 10.);
+
+        let asteroids = HashMap::new();
+
+        let mut field = Asteroids {
+            count: 0,
+            asteroids,
+        };
+
+        field.add_asteroid("f1".to_string(), asteroid1.clone());
+        field.add_asteroid("f1".to_string(), asteroid2.clone());
+        field.add_asteroid("f1".to_string(), asteroid3.clone());
+
+        field.refresh_last_updated(10.0);
+
+        assert_eq!(field.asteroids.get("f1_0").unwrap().last_updated(), 10.);
+        assert_eq!(field.asteroids.get("f1_1").unwrap().last_updated(), 10.);
+        assert_eq!(field.asteroids.get("f1_2").unwrap().last_updated(), 10.);
     }
 
     #[test]
