@@ -28,9 +28,9 @@ impl Asteroids {
     }
 
     fn add_asteroid(&mut self, name: String, asteroid: Asteroid) {
-        self.count += 1;
         self.asteroids
             .insert(format!("{}_{}", name, self.count), asteroid);
+        self.count += 1;
     }
 }
 
@@ -457,6 +457,7 @@ mod tests {
         assert!(asteroid1 == asteroid2);
     }
 
+    /// Asteroids are the same
     #[test]
     fn asteroid_synchronize_1_test() {
         let mut asteroid1 = Asteroid::new_pos_and_size(0., 0., 10.);
@@ -483,10 +484,11 @@ mod tests {
         field2.add_asteroid("f1".to_string(), asteroid2.clone());
 
         let asteroids = synchronize_asteroids(&mut field1, field2, "f2".to_string());
-        assert!(asteroids.asteroids.get("f1_1").unwrap() == &asteroid1);
-        assert!(asteroids.asteroids.get("f1_2").unwrap() == &asteroid2);
+        assert!(asteroids.asteroids.get("f1_0").unwrap() == &asteroid1);
+        assert!(asteroids.asteroids.get("f1_1").unwrap() == &asteroid2);
     }
 
+    /// New asteroid in field2
     #[test]
     fn asteroid_synchronize_2_test() {
         let mut asteroid1 = Asteroid::new_pos_and_size(0., 0., 10.);
@@ -512,10 +514,11 @@ mod tests {
         field2.add_asteroid("f1".to_string(), asteroid2.clone());
 
         let asteroids = synchronize_asteroids(&mut field1, field2, "f2".to_string());
-        assert!(asteroids.asteroids.get("f1_1").unwrap() == &asteroid1);
-        assert!(asteroids.asteroids.get("f2_2").unwrap() == &asteroid2);
+        assert!(asteroids.asteroids.get("f1_0").unwrap() == &asteroid1);
+        assert!(asteroids.asteroids.get("f2_1").unwrap() == &asteroid2);
     }
 
+    /// Asteroid updated in field2
     #[test]
     fn asteroid_synchronize_3_test() {
         let mut asteroid1 = Asteroid::new_pos_and_size(0., 0., 10.);
@@ -523,7 +526,7 @@ mod tests {
         let mut asteroid3 = Asteroid::new_pos_and_size(0., 0., 10.);
         asteroid1.set_last_updated(0.0);
         asteroid2.set_last_updated(2.0);
-        asteroid3.set_last_updated(3.0);
+        asteroid3.set_last_updated(50.0);
 
         let asteroids = HashMap::new();
         let asteroids_c = asteroids.clone();
@@ -544,8 +547,8 @@ mod tests {
         field2.add_asteroid("f1".to_string(), asteroid3.clone());
 
         let asteroids = synchronize_asteroids(&mut field1, field2, "f2".to_string());
-        assert!(asteroids.asteroids.get("f1_1").unwrap() == &asteroid1);
-        assert!(asteroids.asteroids.get("f2_2").unwrap() == &asteroid3);
+        assert!(asteroids.asteroids.get("f1_0").unwrap() == &asteroid1);
+        assert!(asteroids.asteroids.get("f2_1").unwrap() == &asteroid3);
     }
 
     #[test]
