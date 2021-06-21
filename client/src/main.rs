@@ -6,11 +6,12 @@ mod gameover;
 mod network;
 mod screen;
 mod ship;
+use crate::asteroid::Asteroids;
+use crate::collision::manage_collisions;
 #[cfg(not(target_arch = "wasm32"))]
 use crate::network::{
     connect_stream, connect_ws, deserialize_host_data, serialize_guest_data, serialize_host_data,
 };
-use crate::{asteroid::Asteroid, collision::manage_collisions};
 use crate::{gameover::manage_gameover, ship::Ship};
 use macroquad::prelude::*;
 #[cfg(not(target_arch = "wasm32"))]
@@ -108,12 +109,9 @@ async fn main() {
     // players.push(Ship::new(String::from("Player 3")));
     // players.push(Ship::new(String::from("Player 4")));
 
-    let mut asteroids = Vec::new();
-
+    let mut asteroids: Asteroids = Asteroids::generate_field(opt.name.clone(), 0);
     if opt.mode == "host" {
-        for _ in 0..MAX_ASTEROIDS {
-            asteroids.push(Asteroid::new());
-        }
+        asteroids = Asteroids::generate_field(opt.name.clone(), MAX_ASTEROIDS);
     }
 
     #[cfg(not(target_arch = "wasm32"))]
@@ -156,7 +154,7 @@ async fn main() {
                     &opt.name,
                     &opt.mode,
                     msg,
-                    &mut asteroids,
+                    &mut asteroids.get_asteroids(),
                     &mut players,
                     &mut gameover,
                     &mut host_msg_received,
@@ -185,7 +183,7 @@ async fn main() {
                         &opt.name,
                         &opt.mode,
                         msg,
-                        &mut asteroids,
+                        &mut asteroids.get_asteroids(),
                         &mut players,
                         &mut gameover,
                         &mut host_msg_received,
@@ -200,7 +198,7 @@ async fn main() {
                 if opt.mode == "host" {
                     tx_to_socket
                         .send(serialize_host_data(
-                            &mut asteroids,
+                            &mut asteroids.get_asteroids(),
                             &mut players,
                             &mut gameover,
                         ))
@@ -290,12 +288,19 @@ async fn main() {
             }
         }
 
-        for asteroid in asteroids.iter_mut() {
+        for asteroid in asteroids.get_asteroids().values_mut() {
             asteroid.update_pos();
         }
 
         // if opt.mode == "host" {
-        manage_collisions(&mut players, &mut asteroids, opt.god, &opt.mode, frame_t);
+        manage_collisions(
+            &mut players,
+            &mut asteroids,
+            opt.name.clone(),
+            opt.god,
+            &opt.mode,
+            frame_t,
+        );
         // }
 
         if asteroids.is_empty() || players.is_empty() {
@@ -311,7 +316,7 @@ async fn main() {
             }
         }
 
-        for asteroid in asteroids.iter() {
+        for asteroid in asteroids.get_asteroids().values_mut() {
             if !asteroid.collided() {
                 asteroid.draw();
             }

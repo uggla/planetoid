@@ -9,12 +9,12 @@ use std::collections::HashMap;
 use std::fmt;
 
 pub struct Asteroids {
-    count: usize,
+    count: u8,
     asteroids: HashMap<String, Asteroid>,
 }
 
 impl Asteroids {
-    fn generate_field(name: String, number: usize) -> Self {
+    pub fn generate_field(name: String, number: u8) -> Self {
         let mut asteroids = HashMap::new();
         for item in 0..number {
             let asteroid = Asteroid::new();
@@ -27,16 +27,24 @@ impl Asteroids {
         }
     }
 
-    fn add_asteroid(&mut self, name: String, asteroid: Asteroid) {
+    pub fn add_asteroid(&mut self, name: String, asteroid: Asteroid) {
         self.asteroids
             .insert(format!("{}_{}", name, self.count), asteroid);
         self.count += 1;
     }
 
-    fn refresh_last_updated(&mut self, last_updated: f64) {
+    pub fn refresh_last_updated(&mut self, last_updated: f64) {
         for asteroid in self.asteroids.values_mut() {
             asteroid.set_last_updated(last_updated);
         }
+    }
+
+    pub fn get_asteroids(&mut self) -> &mut HashMap<String, Asteroid> {
+        &mut self.asteroids
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.asteroids.is_empty()
     }
 }
 

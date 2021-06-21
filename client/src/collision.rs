@@ -1,6 +1,9 @@
 use macroquad::prelude::*;
 
-use crate::{asteroid::Asteroid, ship::Ship};
+use crate::{
+    asteroid::{Asteroid, Asteroids},
+    ship::Ship,
+};
 
 pub trait Collided {
     fn size(&self) -> f32;
@@ -13,23 +16,25 @@ pub fn is_collided<A: Collided, B: Collided>(obj1: &A, obj2: &B) -> bool {
 
 pub fn manage_collisions(
     players: &mut Vec<Ship>,
-    asteroids: &mut Vec<Asteroid>,
+    asteroids: &mut Asteroids,
+    name: String,
     god: bool,
     mode: &str,
     frame_t: f64,
 ) {
     let mut opponents = players.clone();
     for ship in players.iter_mut() {
-        let mut new_asteroids = ship_vs_asteroids(ship, asteroids, god, mode);
+        ship_vs_asteroids(ship, asteroids, name.clone(), god, mode);
         ship_vs_opponents(ship, &mut opponents);
 
         // if mode == "host" {
         ship.bullets
             // .retain(|bullet| bullet.shot_at() + 1.5 > frame_t && !bullet.collided());
             .retain(|bullet| bullet.shot_at() + 1.5 > frame_t);
-        asteroids.retain(|asteroid| !asteroid.collided());
+        asteroids
+            .get_asteroids()
+            .retain(|_key, value| !value.collided());
         // }
-        asteroids.append(&mut new_asteroids);
     }
 
     for ship_index in 0..players.len() {
@@ -43,18 +48,22 @@ pub fn manage_collisions(
 
 fn ship_vs_asteroids(
     ship: &mut Ship,
-    asteroids: &mut Vec<Asteroid>,
+    asteroids: &mut Asteroids,
+    name: String,
     god: bool,
     mode: &str,
-) -> Vec<Asteroid> {
+) {
     let mut new_asteroids = Vec::new();
-    for asteroid in asteroids.iter_mut() {
+    for asteroid in asteroids.get_asteroids().values_mut() {
         if is_collided(asteroid, ship) && !god && mode != "spectator" {
             ship.set_collided(true);
         }
         ship_bullet_vs_asteroid(ship, asteroid, &mut new_asteroids);
     }
-    new_asteroids
+
+    for asteroid in new_asteroids {
+        asteroids.add_asteroid(name.clone(), asteroid);
+    }
 }
 
 fn ship_bullet_vs_asteroid(

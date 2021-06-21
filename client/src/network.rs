@@ -1,7 +1,8 @@
-use crate::{asteroid::Asteroid, collision::Collided, ship::Ship};
+use crate::{asteroid::Asteroid, ship::Ship};
 use macroquad::prelude::get_time;
 use serde::{Deserialize, Serialize};
 use std::{
+    collections::HashMap,
     error::Error,
     net::{TcpStream, ToSocketAddrs},
 };
@@ -40,7 +41,7 @@ pub fn connect_ws(
 
 #[derive(Serialize, Deserialize)]
 struct GameData {
-    asteroids: Vec<Asteroid>,
+    asteroids: HashMap<String, Asteroid>,
     players: Vec<Ship>,
     gameover: bool,
 }
@@ -49,7 +50,7 @@ pub fn deserialize_host_data(
     name: &str,
     mode: &str,
     msg: Message,
-    asteroids: &mut Vec<Asteroid>,
+    asteroids: &mut HashMap<String, Asteroid>,
     players: &mut Vec<Ship>,
     gameover: &mut bool,
     host_msg_received: &mut bool,
@@ -115,12 +116,12 @@ pub fn deserialize_host_data(
 }
 
 pub fn serialize_host_data(
-    asteroids: &mut Vec<Asteroid>,
+    asteroids: &mut HashMap<String, Asteroid>,
     players: &mut Vec<Ship>,
     gameover: &mut bool,
 ) -> String {
     let gamedata = GameData {
-        asteroids: asteroids.to_vec(),
+        asteroids: asteroids.clone(),
         players: players.clone(),
         gameover: *gameover,
     };

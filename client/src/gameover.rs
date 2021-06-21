@@ -1,11 +1,12 @@
 use crate::MAX_ASTEROIDS;
 use macroquad::prelude::*;
 
-use crate::{asteroid::Asteroid, ship::Ship};
+use crate::asteroid::Asteroids;
+use crate::ship::Ship;
 
 pub fn manage_gameover(
     players: &mut Vec<Ship>,
-    asteroids: &mut Vec<Asteroid>,
+    asteroids: &mut Asteroids,
     mode: &str,
     name: &str,
     frame_count: &mut u32,
@@ -31,11 +32,8 @@ pub fn manage_gameover(
         log::info!("Restarting game.");
         players.clear();
         players.push(Ship::new(String::from(name)));
-        *asteroids = Vec::new();
         *gameover = false;
-        for _ in 0..MAX_ASTEROIDS {
-            asteroids.push(Asteroid::new());
-        }
+        *asteroids = Asteroids::generate_field(String::from(name), MAX_ASTEROIDS);
         *frame_count = 0;
     }
 }
