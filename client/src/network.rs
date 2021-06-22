@@ -1,8 +1,8 @@
-use crate::{asteroid::Asteroid, ship::Ship};
+use crate::asteroid::synchronize_asteroids;
+use crate::{asteroid::Asteroids, ship::Ship};
 use macroquad::prelude::get_time;
 use serde::{Deserialize, Serialize};
 use std::{
-    collections::HashMap,
     error::Error,
     net::{TcpStream, ToSocketAddrs},
 };
@@ -41,7 +41,7 @@ pub fn connect_ws(
 
 #[derive(Serialize, Deserialize)]
 struct GameData {
-    asteroids: HashMap<String, Asteroid>,
+    asteroids: Asteroids,
     players: Vec<Ship>,
     gameover: bool,
 }
@@ -50,7 +50,7 @@ pub fn deserialize_host_data(
     name: &str,
     mode: &str,
     msg: Message,
-    asteroids: &mut HashMap<String, Asteroid>,
+    asteroids: &mut Asteroids,
     players: &mut Vec<Ship>,
     gameover: &mut bool,
     host_msg_received: &mut bool,
@@ -62,17 +62,20 @@ pub fn deserialize_host_data(
             let name = msg.strip_prefix("Hello from ").unwrap();
             players.push(Ship::new(String::from(name)));
             *sync_t = get_time();
+            asteroids.refresh_last_updated(get_time() - *sync_t);
         }
 
         if mode == "host" {
             if msg.contains("GuestData: ") {
                 let msg = msg.strip_prefix("GuestData: ").unwrap();
-                let opponent: Ship = serde_json::from_str(&msg).unwrap();
+                let guestdata: GuestData = serde_json::from_str(&msg).unwrap();
+                let opponent = guestdata.ship;
                 for ship in players.iter_mut() {
                     if ship.name() == opponent.name() {
                         *ship = opponent.clone();
                     }
                 }
+                synchronize_asteroids(asteroids, guestdata.asteroids, "client".to_string());
             }
         }
 
@@ -80,7 +83,7 @@ pub fn deserialize_host_data(
             if msg.contains("GameData: ") {
                 let msg = msg.strip_prefix("GameData: ").unwrap();
 
-                asteroids.clear();
+                // asteroids.get_asteroids().clear();
 
                 let mut current_ship: Ship = Ship::new(name.to_string());
                 for ship in players.clone() {
@@ -116,7 +119,7 @@ pub fn deserialize_host_data(
 }
 
 pub fn serialize_host_data(
-    asteroids: &mut HashMap<String, Asteroid>,
+    asteroids: &mut Asteroids,
     players: &mut Vec<Ship>,
     gameover: &mut bool,
 ) -> String {
@@ -129,6 +132,16 @@ pub fn serialize_host_data(
     format!("GameData: {}", serde_json::to_string(&gamedata).unwrap())
 }
 
-pub fn serialize_guest_data(ship: &Ship) -> String {
-    format!("GuestData: {}", serde_json::to_string(ship).unwrap())
+#[derive(Serialize, Deserialize)]
+struct GuestData {
+    asteroids: Asteroids,
+    ship: Ship,
+}
+
+pub fn serialize_guest_data(ship: &Ship, asteroids: &mut Asteroids) -> String {
+    let guestdata = GuestData {
+        asteroids: asteroids.clone(),
+        ship: ship.clone(),
+    };
+    format!("GuestData: {}", serde_json::to_string(&guestdata).unwrap())
 }

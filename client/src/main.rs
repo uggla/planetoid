@@ -154,7 +154,7 @@ async fn main() {
                     &opt.name,
                     &opt.mode,
                     msg,
-                    &mut asteroids.get_asteroids(),
+                    &mut asteroids,
                     &mut players,
                     &mut gameover,
                     &mut host_msg_received,
@@ -183,7 +183,7 @@ async fn main() {
                         &opt.name,
                         &opt.mode,
                         msg,
-                        &mut asteroids.get_asteroids(),
+                        &mut asteroids,
                         &mut players,
                         &mut gameover,
                         &mut host_msg_received,
@@ -198,7 +198,7 @@ async fn main() {
                 if opt.mode == "host" {
                     tx_to_socket
                         .send(serialize_host_data(
-                            &mut asteroids.get_asteroids(),
+                            &mut asteroids,
                             &mut players,
                             &mut gameover,
                         ))
@@ -209,9 +209,11 @@ async fn main() {
 
             if host_msg_received {
                 if opt.mode == "guest" {
-                    for ship in players.iter_mut() {
+                    for ship in players.iter() {
                         if ship.name() == opt.name {
-                            tx_to_socket.send(serialize_guest_data(ship)).unwrap();
+                            tx_to_socket
+                                .send(serialize_guest_data(ship, &mut asteroids))
+                                .unwrap();
                         }
                     }
                     host_msg_received = false;
@@ -300,6 +302,7 @@ async fn main() {
             opt.god,
             &opt.mode,
             frame_t,
+            sync_t,
         );
         // }
 

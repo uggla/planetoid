@@ -8,6 +8,7 @@ use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::fmt;
 
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Asteroids {
     count: u8,
     asteroids: HashMap<String, Asteroid>,
@@ -48,7 +49,7 @@ impl Asteroids {
     }
 }
 
-fn synchronize_asteroids(
+pub fn synchronize_asteroids(
     field1: &mut Asteroids,
     field2: Asteroids,
     name_field2: String,
@@ -71,6 +72,7 @@ fn synchronize_asteroids(
     field1
 }
 
+#[derive(Debug)]
 pub struct Asteroid {
     pos: Vec2,
     vel: Vec2,

@@ -21,10 +21,11 @@ pub fn manage_collisions(
     god: bool,
     mode: &str,
     frame_t: f64,
+    sync_t: f64,
 ) {
     let mut opponents = players.clone();
     for ship in players.iter_mut() {
-        ship_vs_asteroids(ship, asteroids, name.clone(), god, mode);
+        ship_vs_asteroids(ship, asteroids, name.clone(), god, mode, sync_t);
         ship_vs_opponents(ship, &mut opponents);
 
         // if mode == "host" {
@@ -52,13 +53,14 @@ fn ship_vs_asteroids(
     name: String,
     god: bool,
     mode: &str,
+    sync_t: f64,
 ) {
     let mut new_asteroids = Vec::new();
     for asteroid in asteroids.get_asteroids().values_mut() {
         if is_collided(asteroid, ship) && !god && mode != "spectator" {
             ship.set_collided(true);
         }
-        ship_bullet_vs_asteroid(ship, asteroid, &mut new_asteroids);
+        ship_bullet_vs_asteroid(ship, asteroid, &mut new_asteroids, sync_t);
     }
 
     for asteroid in new_asteroids {
@@ -70,10 +72,12 @@ fn ship_bullet_vs_asteroid(
     ship: &mut Ship,
     asteroid: &mut Asteroid,
     new_asteroids: &mut Vec<Asteroid>,
+    sync_t: f64,
 ) {
     for bullet in ship.bullets.iter_mut() {
         if !bullet.collided() && !asteroid.collided() && is_collided(asteroid, bullet) {
             asteroid.set_collided(true);
+            asteroid.set_last_updated(get_time() - sync_t);
             bullet.set_collided(true);
             if asteroid.sides() > 4 {
                 *new_asteroids = Asteroid::new_split(
