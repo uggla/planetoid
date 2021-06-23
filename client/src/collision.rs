@@ -28,14 +28,14 @@ pub fn manage_collisions(
         ship_vs_asteroids(ship, asteroids, name.clone(), god, mode, sync_t);
         ship_vs_opponents(ship, &mut opponents);
 
-        // if mode == "host" {
         ship.bullets
             // .retain(|bullet| bullet.shot_at() + 1.5 > frame_t && !bullet.collided());
             .retain(|bullet| bullet.shot_at() + 1.5 > frame_t);
-        asteroids
-            .get_asteroids()
-            .retain(|_key, value| !value.collided());
-        // }
+
+        // TODO: asteroids must be retain after synchronization otherwise it causes issues.
+        // asteroids
+        //     .get_asteroids()
+        //     .retain(|_key, value| !value.collided());
     }
 
     for ship_index in 0..players.len() {
@@ -63,8 +63,10 @@ fn ship_vs_asteroids(
         ship_bullet_vs_asteroid(ship, asteroid, &mut new_asteroids, sync_t);
     }
 
-    for asteroid in new_asteroids {
-        asteroids.add_asteroid(name.clone(), asteroid);
+    if ship.name() == name {
+        for asteroid in new_asteroids {
+            asteroids.add_asteroid(name.clone(), asteroid);
+        }
     }
 }
 

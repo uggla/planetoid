@@ -5,21 +5,21 @@ use serde::de::{self, Deserializer, MapAccess, Visitor};
 use serde::ser::{SerializeStruct, Serializer};
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::fmt;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Asteroids {
     count: u8,
-    asteroids: HashMap<String, Asteroid>,
+    asteroids: BTreeMap<String, Asteroid>,
 }
 
 impl Asteroids {
     pub fn generate_field(name: String, number: u8) -> Self {
-        let mut asteroids = HashMap::new();
+        let mut asteroids = BTreeMap::new();
         for item in 0..number {
             let asteroid = Asteroid::new();
-            asteroids.insert(format!("{}_{}", name, item), asteroid);
+            asteroids.insert(format!("{}_{:06}", name, item), asteroid);
         }
 
         Self {
@@ -29,8 +29,10 @@ impl Asteroids {
     }
 
     pub fn add_asteroid(&mut self, name: String, asteroid: Asteroid) {
+        // dbg!(&name);
+        // dbg!(&asteroid);
         self.asteroids
-            .insert(format!("{}_{}", name, self.count), asteroid);
+            .insert(format!("{}_{:06}", name, self.count), asteroid);
         self.count += 1;
     }
 
@@ -40,7 +42,7 @@ impl Asteroids {
         }
     }
 
-    pub fn get_asteroids(&mut self) -> &mut HashMap<String, Asteroid> {
+    pub fn get_asteroids(&mut self) -> &mut BTreeMap<String, Asteroid> {
         &mut self.asteroids
     }
 
@@ -53,10 +55,19 @@ pub fn synchronize_asteroids(
     field1: &mut Asteroids,
     field2: Asteroids,
     name_field2: String,
-) -> &mut Asteroids {
+    // ) -> &mut Asteroids {
+) {
     for (key_field2, value_field2) in &field2.asteroids {
         match field1.asteroids.get(key_field2) {
-            None => field1.add_asteroid(name_field2.clone(), value_field2.clone()),
+            None => {
+                // field1.add_asteroid(key_field2.clone(), value_field2.clone());
+                field1
+                    .asteroids
+                    .insert(key_field2.clone(), value_field2.clone());
+                // field1.count += 1;
+                // dbg!("here");
+                dbg!(&key_field2);
+            }
 
             Some(value_field1) => {
                 if value_field2.last_updated() > value_field1.last_updated() {
@@ -69,7 +80,7 @@ pub fn synchronize_asteroids(
             }
         }
     }
-    field1
+    // field1
 }
 
 #[derive(Debug)]
@@ -101,6 +112,7 @@ impl Asteroid {
         }
     }
 
+    #[allow(dead_code)]
     pub fn new_pos_and_size(x: f32, y: f32, size: f32) -> Self {
         Self {
             pos: Vec2::new(x, y),
@@ -489,7 +501,7 @@ mod tests {
         asteroid1.set_last_updated(0.0);
         asteroid2.set_last_updated(2.0);
 
-        let asteroids = HashMap::new();
+        let asteroids = BTreeMap::new();
         let asteroids_c = asteroids.clone();
 
         let mut field1 = Asteroids {
@@ -507,9 +519,12 @@ mod tests {
         field2.add_asteroid("f1".to_string(), asteroid1.clone());
         field2.add_asteroid("f1".to_string(), asteroid2.clone());
 
-        let asteroids = synchronize_asteroids(&mut field1, field2, "f2".to_string());
-        assert!(asteroids.asteroids.get("f1_0").unwrap() == &asteroid1);
-        assert!(asteroids.asteroids.get("f1_1").unwrap() == &asteroid2);
+        // let asteroids = synchronize_asteroids(&mut field1, field2, "f2".to_string());
+        synchronize_asteroids(&mut field1, field2, "f2".to_string());
+        // assert!(asteroids.asteroids.get("f1_000000").unwrap() == &asteroid1);
+        // assert!(asteroids.asteroids.get("f1_000001").unwrap() == &asteroid2);
+        assert!(field1.asteroids.get("f1_000000").unwrap() == &asteroid1);
+        assert!(field1.asteroids.get("f1_000001").unwrap() == &asteroid2);
     }
 
     /// New asteroid in field2
@@ -517,10 +532,11 @@ mod tests {
     fn asteroid_synchronize_2_test() {
         let mut asteroid1 = Asteroid::new_pos_and_size(0., 0., 10.);
         let mut asteroid2 = Asteroid::new_pos_and_size(0., 0., 10.);
+        let asteroid3 = Asteroid::new_pos_and_size(0., 0., 20.);
         asteroid1.set_last_updated(0.0);
         asteroid2.set_last_updated(2.0);
 
-        let asteroids = HashMap::new();
+        let asteroids = BTreeMap::new();
         let asteroids_c = asteroids.clone();
 
         let mut field1 = Asteroids {
@@ -534,12 +550,57 @@ mod tests {
         };
 
         field1.add_asteroid("f1".to_string(), asteroid1.clone());
+        field1.add_asteroid("f1".to_string(), asteroid2.clone());
+        field2.add_asteroid("f2".to_string(), asteroid1.clone());
+        field2.add_asteroid("f2".to_string(), asteroid2.clone());
+        field2.add_asteroid("f2".to_string(), asteroid3.clone());
+
+        // let asteroids = synchronize_asteroids(&mut field1, field2, "f2".to_string());
+        // assert!(asteroids.asteroids.get("f1_000000").unwrap() == &asteroid1);
+        // assert!(asteroids.asteroids.get("f1_000001").unwrap() == &asteroid2);
+        // assert!(asteroids.asteroids.get("f2_000002").unwrap() == &asteroid3);
+        synchronize_asteroids(&mut field1, field2, "f2".to_string());
+        assert!(field1.asteroids.get("f1_000000").unwrap() == &asteroid1);
+        assert!(field1.asteroids.get("f1_000001").unwrap() == &asteroid2);
+        assert!(field1.asteroids.get("f2_000002").unwrap() == &asteroid3);
+    }
+
+    /// New asteroid in field1
+    #[test]
+    fn asteroid_synchronize_6_test() {
+        let mut asteroid1 = Asteroid::new_pos_and_size(0., 0., 10.);
+        let mut asteroid2 = Asteroid::new_pos_and_size(0., 0., 10.);
+        let asteroid3 = Asteroid::new_pos_and_size(0., 0., 20.);
+        asteroid1.set_last_updated(0.0);
+        asteroid2.set_last_updated(2.0);
+
+        let asteroids = BTreeMap::new();
+        let asteroids_c = asteroids.clone();
+
+        let mut field1 = Asteroids {
+            count: 0,
+            asteroids,
+        };
+
+        let mut field2 = Asteroids {
+            count: 0,
+            asteroids: asteroids_c,
+        };
+
+        field1.add_asteroid("f1".to_string(), asteroid1.clone());
+        field1.add_asteroid("f1".to_string(), asteroid2.clone());
         field2.add_asteroid("f1".to_string(), asteroid1.clone());
         field2.add_asteroid("f1".to_string(), asteroid2.clone());
+        field2.add_asteroid("f1".to_string(), asteroid3.clone());
 
-        let asteroids = synchronize_asteroids(&mut field1, field2, "f2".to_string());
-        assert!(asteroids.asteroids.get("f1_0").unwrap() == &asteroid1);
-        assert!(asteroids.asteroids.get("f2_1").unwrap() == &asteroid2);
+        // let asteroids = synchronize_asteroids(&mut field1, field2, "f2".to_string());
+        // assert!(asteroids.asteroids.get("f1_000000").unwrap() == &asteroid1);
+        // assert!(asteroids.asteroids.get("f1_000001").unwrap() == &asteroid2);
+        // assert!(asteroids.asteroids.get("f1_000002").unwrap() == &asteroid3);
+        synchronize_asteroids(&mut field1, field2, "f2".to_string());
+        assert!(field1.asteroids.get("f1_000000").unwrap() == &asteroid1);
+        assert!(field1.asteroids.get("f1_000001").unwrap() == &asteroid2);
+        assert!(field1.asteroids.get("f1_000002").unwrap() == &asteroid3);
     }
 
     /// Asteroid updated in field2
@@ -552,7 +613,7 @@ mod tests {
         asteroid2.set_last_updated(2.0);
         asteroid3.set_last_updated(50.0);
 
-        let asteroids = HashMap::new();
+        let asteroids = BTreeMap::new();
         let asteroids_c = asteroids.clone();
 
         let mut field1 = Asteroids {
@@ -570,9 +631,12 @@ mod tests {
         field2.add_asteroid("f1".to_string(), asteroid1.clone());
         field2.add_asteroid("f1".to_string(), asteroid3.clone());
 
-        let asteroids = synchronize_asteroids(&mut field1, field2, "f2".to_string());
-        assert!(asteroids.asteroids.get("f1_0").unwrap() == &asteroid1);
-        assert!(asteroids.asteroids.get("f1_1").unwrap() == &asteroid3);
+        // let asteroids = synchronize_asteroids(&mut field1, field2, "f2".to_string());
+        // assert!(asteroids.asteroids.get("f1_000000").unwrap() == &asteroid1);
+        // assert!(asteroids.asteroids.get("f1_000001").unwrap() == &asteroid3);
+        synchronize_asteroids(&mut field1, field2, "f2".to_string());
+        assert!(field1.asteroids.get("f1_000000").unwrap() == &asteroid1);
+        assert!(field1.asteroids.get("f1_000001").unwrap() == &asteroid3);
     }
 
     /// Asteroid not updated in field2
@@ -585,7 +649,7 @@ mod tests {
         asteroid2.set_last_updated(60.0);
         asteroid3.set_last_updated(50.0);
 
-        let asteroids = HashMap::new();
+        let asteroids = BTreeMap::new();
         let asteroids_c = asteroids.clone();
 
         let mut field1 = Asteroids {
@@ -603,9 +667,12 @@ mod tests {
         field2.add_asteroid("f1".to_string(), asteroid1.clone());
         field2.add_asteroid("f1".to_string(), asteroid3.clone());
 
-        let asteroids = synchronize_asteroids(&mut field1, field2, "f2".to_string());
-        assert!(asteroids.asteroids.get("f1_0").unwrap() == &asteroid1);
-        assert!(asteroids.asteroids.get("f1_1").unwrap() == &asteroid2);
+        // let asteroids = synchronize_asteroids(&mut field1, field2, "f2".to_string());
+        // assert!(asteroids.asteroids.get("f1_000000").unwrap() == &asteroid1);
+        // assert!(asteroids.asteroids.get("f1_000001").unwrap() == &asteroid2);
+        synchronize_asteroids(&mut field1, field2, "f2".to_string());
+        assert!(field1.asteroids.get("f1_000000").unwrap() == &asteroid1);
+        assert!(field1.asteroids.get("f1_000001").unwrap() == &asteroid2);
     }
 
     #[test]
@@ -614,7 +681,7 @@ mod tests {
         let asteroid2 = Asteroid::new_pos_and_size(0., 0., 10.);
         let asteroid3 = Asteroid::new_pos_and_size(0., 0., 10.);
 
-        let asteroids = HashMap::new();
+        let asteroids = BTreeMap::new();
 
         let mut field = Asteroids {
             count: 0,
@@ -627,9 +694,18 @@ mod tests {
 
         field.refresh_last_updated(10.0);
 
-        assert_eq!(field.asteroids.get("f1_0").unwrap().last_updated(), 10.);
-        assert_eq!(field.asteroids.get("f1_1").unwrap().last_updated(), 10.);
-        assert_eq!(field.asteroids.get("f1_2").unwrap().last_updated(), 10.);
+        assert_eq!(
+            field.asteroids.get("f1_000000").unwrap().last_updated(),
+            10.
+        );
+        assert_eq!(
+            field.asteroids.get("f1_000001").unwrap().last_updated(),
+            10.
+        );
+        assert_eq!(
+            field.asteroids.get("f1_000002").unwrap().last_updated(),
+            10.
+        );
     }
 
     #[test]
@@ -642,7 +718,10 @@ mod tests {
             let field = Asteroids::generate_field("planetoid".to_string(), 3);
             let mut keys: Vec<&String> = field.asteroids.keys().collect();
             keys.sort();
-            assert_eq!(keys, ["planetoid_0", "planetoid_1", "planetoid_2"]);
+            assert_eq!(
+                keys,
+                ["planetoid_000000", "planetoid_000001", "planetoid_000002"]
+            );
         }
         macroquad::Window::from_config(window_conf(), amain());
     }

@@ -101,7 +101,7 @@ async fn main() {
     let mut gameover = false;
     let mut host_msg_received: bool = false;
     let mut last_shot = get_time();
-    let mut sync_t = get_time();
+    let mut sync_t: f64 = 0.0;
     let mut players: Vec<Ship> = Vec::new();
     players.push(Ship::new(String::from(&opt.name)));
     // Temporary stuff for debugging
