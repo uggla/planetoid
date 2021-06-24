@@ -58,7 +58,7 @@ struct Opt {
     name: String,
 }
 
-const MAX_ASTEROIDS: u8 = 2;
+const MAX_ASTEROIDS: usize = 1;
 
 fn window_conf() -> Conf {
     Conf {

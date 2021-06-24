@@ -10,12 +10,12 @@ use std::fmt;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Asteroids {
-    count: u8,
+    count: usize,
     asteroids: BTreeMap<String, Asteroid>,
 }
 
 impl Asteroids {
-    pub fn generate_field(name: String, number: u8) -> Self {
+    pub fn generate_field(name: String, number: usize) -> Self {
         let mut asteroids = BTreeMap::new();
         for item in 0..number {
             let asteroid = Asteroid::new();
