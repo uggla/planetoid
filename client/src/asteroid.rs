@@ -71,11 +71,12 @@ pub fn synchronize_asteroids(
 
             Some(value_field1) => {
                 if value_field2.last_updated() > value_field1.last_updated() {
-                    field1
-                        .asteroids
-                        .get_mut(key_field2)
-                        .unwrap()
-                        .set_last_updated(value_field2.last_updated());
+                    // field1
+                    //     .asteroids
+                    //     .get_mut(key_field2)
+                    //     .unwrap()
+                    //     .set_last_updated(value_field2.last_updated());
+                    *field1.asteroids.get_mut(key_field2).unwrap() = value_field2.clone();
                 }
             }
         }
