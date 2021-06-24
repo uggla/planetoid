@@ -33,9 +33,11 @@ pub fn manage_collisions(
             .retain(|bullet| bullet.shot_at() + 1.5 > frame_t);
 
         // TODO: asteroids must be retain after synchronization otherwise it causes issues.
-        // asteroids
-        //     .get_asteroids()
-        //     .retain(|_key, value| !value.collided());
+        asteroids.get_asteroids().retain(|_key, value| {
+            (value.last_updated() + 0.2) > (get_time() - sync_t) || !value.collided()
+        });
+        dbg!(get_time() - sync_t);
+        dbg!(&asteroids);
     }
 
     for ship_index in 0..players.len() {
