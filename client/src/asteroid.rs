@@ -64,7 +64,7 @@ pub fn synchronize_asteroids(
                 field1
                     .asteroids
                     .insert(key_field2.clone(), value_field2.clone());
-                // field1.count += 1;
+                field1.count += 1;
                 // dbg!("here");
                 dbg!(&key_field2);
             }
