@@ -29,13 +29,12 @@ impl Asteroids {
     }
 
     pub fn add_asteroid(&mut self, name: String, asteroid: Asteroid) {
-        // dbg!(&name);
-        // dbg!(&asteroid);
         self.asteroids
             .insert(format!("{}_{:06}", name, self.count), asteroid);
         self.count += 1;
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     pub fn refresh_last_updated(&mut self, last_updated: f64) {
         for asteroid in self.asteroids.values_mut() {
             asteroid.set_last_updated(last_updated);
@@ -51,37 +50,24 @@ impl Asteroids {
     }
 }
 
-pub fn synchronize_asteroids(
-    field1: &mut Asteroids,
-    field2: Asteroids,
-    name_field2: String,
-    // ) -> &mut Asteroids {
-) {
+#[cfg(not(target_arch = "wasm32"))]
+pub fn synchronize_asteroids(field1: &mut Asteroids, field2: Asteroids) {
     for (key_field2, value_field2) in &field2.asteroids {
         match field1.asteroids.get(key_field2) {
             None => {
-                // field1.add_asteroid(key_field2.clone(), value_field2.clone());
                 field1
                     .asteroids
                     .insert(key_field2.clone(), value_field2.clone());
                 field1.count += 1;
-                // dbg!("here");
-                dbg!(&key_field2);
             }
 
             Some(value_field1) => {
                 if value_field2.last_updated() > value_field1.last_updated() {
-                    // field1
-                    //     .asteroids
-                    //     .get_mut(key_field2)
-                    //     .unwrap()
-                    //     .set_last_updated(value_field2.last_updated());
                     *field1.asteroids.get_mut(key_field2).unwrap() = value_field2.clone();
                 }
             }
         }
     }
-    // field1
 }
 
 #[derive(Debug)]
@@ -494,9 +480,8 @@ mod tests {
         assert!(asteroid1 == asteroid2);
     }
 
-    /// Asteroids are the same
     #[test]
-    fn asteroid_synchronize_1_test() {
+    fn asteroid_synchronize_asteroid_are_the_same_test() {
         let mut asteroid1 = Asteroid::new_pos_and_size(0., 0., 10.);
         let mut asteroid2 = Asteroid::new_pos_and_size(0., 0., 10.);
         asteroid1.set_last_updated(0.0);
@@ -520,17 +505,13 @@ mod tests {
         field2.add_asteroid("f1".to_string(), asteroid1.clone());
         field2.add_asteroid("f1".to_string(), asteroid2.clone());
 
-        // let asteroids = synchronize_asteroids(&mut field1, field2, "f2".to_string());
-        synchronize_asteroids(&mut field1, field2, "f2".to_string());
-        // assert!(asteroids.asteroids.get("f1_000000").unwrap() == &asteroid1);
-        // assert!(asteroids.asteroids.get("f1_000001").unwrap() == &asteroid2);
+        synchronize_asteroids(&mut field1, field2);
         assert!(field1.asteroids.get("f1_000000").unwrap() == &asteroid1);
         assert!(field1.asteroids.get("f1_000001").unwrap() == &asteroid2);
     }
 
-    /// New asteroid in field2
     #[test]
-    fn asteroid_synchronize_2_test() {
+    fn asteroid_synchronize_new_asteroid_in_field2_test() {
         let mut asteroid1 = Asteroid::new_pos_and_size(0., 0., 10.);
         let mut asteroid2 = Asteroid::new_pos_and_size(0., 0., 10.);
         let asteroid3 = Asteroid::new_pos_and_size(0., 0., 20.);
@@ -556,19 +537,14 @@ mod tests {
         field2.add_asteroid("f2".to_string(), asteroid2.clone());
         field2.add_asteroid("f2".to_string(), asteroid3.clone());
 
-        // let asteroids = synchronize_asteroids(&mut field1, field2, "f2".to_string());
-        // assert!(asteroids.asteroids.get("f1_000000").unwrap() == &asteroid1);
-        // assert!(asteroids.asteroids.get("f1_000001").unwrap() == &asteroid2);
-        // assert!(asteroids.asteroids.get("f2_000002").unwrap() == &asteroid3);
-        synchronize_asteroids(&mut field1, field2, "f2".to_string());
+        synchronize_asteroids(&mut field1, field2);
         assert!(field1.asteroids.get("f1_000000").unwrap() == &asteroid1);
         assert!(field1.asteroids.get("f1_000001").unwrap() == &asteroid2);
         assert!(field1.asteroids.get("f2_000002").unwrap() == &asteroid3);
     }
 
-    /// New asteroid in field1
     #[test]
-    fn asteroid_synchronize_6_test() {
+    fn asteroid_synchronize_new_asteroid_in_field1_test() {
         let mut asteroid1 = Asteroid::new_pos_and_size(0., 0., 10.);
         let mut asteroid2 = Asteroid::new_pos_and_size(0., 0., 10.);
         let asteroid3 = Asteroid::new_pos_and_size(0., 0., 20.);
@@ -594,19 +570,14 @@ mod tests {
         field2.add_asteroid("f1".to_string(), asteroid2.clone());
         field2.add_asteroid("f1".to_string(), asteroid3.clone());
 
-        // let asteroids = synchronize_asteroids(&mut field1, field2, "f2".to_string());
-        // assert!(asteroids.asteroids.get("f1_000000").unwrap() == &asteroid1);
-        // assert!(asteroids.asteroids.get("f1_000001").unwrap() == &asteroid2);
-        // assert!(asteroids.asteroids.get("f1_000002").unwrap() == &asteroid3);
-        synchronize_asteroids(&mut field1, field2, "f2".to_string());
+        synchronize_asteroids(&mut field1, field2);
         assert!(field1.asteroids.get("f1_000000").unwrap() == &asteroid1);
         assert!(field1.asteroids.get("f1_000001").unwrap() == &asteroid2);
         assert!(field1.asteroids.get("f1_000002").unwrap() == &asteroid3);
     }
 
-    /// Asteroid updated in field2
     #[test]
-    fn asteroid_synchronize_3_test() {
+    fn asteroid_synchronize_asteroid_updated_in_field2_test() {
         let mut asteroid1 = Asteroid::new_pos_and_size(0., 0., 10.);
         let mut asteroid2 = Asteroid::new_pos_and_size(0., 0., 10.);
         let mut asteroid3 = Asteroid::new_pos_and_size(0., 0., 10.);
@@ -632,17 +603,13 @@ mod tests {
         field2.add_asteroid("f1".to_string(), asteroid1.clone());
         field2.add_asteroid("f1".to_string(), asteroid3.clone());
 
-        // let asteroids = synchronize_asteroids(&mut field1, field2, "f2".to_string());
-        // assert!(asteroids.asteroids.get("f1_000000").unwrap() == &asteroid1);
-        // assert!(asteroids.asteroids.get("f1_000001").unwrap() == &asteroid3);
-        synchronize_asteroids(&mut field1, field2, "f2".to_string());
+        synchronize_asteroids(&mut field1, field2);
         assert!(field1.asteroids.get("f1_000000").unwrap() == &asteroid1);
         assert!(field1.asteroids.get("f1_000001").unwrap() == &asteroid3);
     }
 
-    /// Asteroid not updated in field2
     #[test]
-    fn asteroid_synchronize_4_test() {
+    fn asteroid_synchronize_asteroid_not_updated_in_field2_test() {
         let mut asteroid1 = Asteroid::new_pos_and_size(0., 0., 10.);
         let mut asteroid2 = Asteroid::new_pos_and_size(0., 0., 10.);
         let mut asteroid3 = Asteroid::new_pos_and_size(0., 0., 10.);
@@ -668,10 +635,7 @@ mod tests {
         field2.add_asteroid("f1".to_string(), asteroid1.clone());
         field2.add_asteroid("f1".to_string(), asteroid3.clone());
 
-        // let asteroids = synchronize_asteroids(&mut field1, field2, "f2".to_string());
-        // assert!(asteroids.asteroids.get("f1_000000").unwrap() == &asteroid1);
-        // assert!(asteroids.asteroids.get("f1_000001").unwrap() == &asteroid2);
-        synchronize_asteroids(&mut field1, field2, "f2".to_string());
+        synchronize_asteroids(&mut field1, field2);
         assert!(field1.asteroids.get("f1_000000").unwrap() == &asteroid1);
         assert!(field1.asteroids.get("f1_000001").unwrap() == &asteroid2);
     }

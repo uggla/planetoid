@@ -106,24 +106,8 @@ impl Ship {
         self.name.clone()
     }
 
-    pub fn set_pos(&mut self, pos: Vec2) {
-        self.pos = pos
-    }
-
     pub fn vel(&self) -> Vec2 {
         self.vel
-    }
-
-    pub fn set_vel(&mut self, vel: Vec2) {
-        self.vel = vel
-    }
-
-    pub fn acc(&self) -> Vec2 {
-        self.acc
-    }
-
-    pub fn set_acc(&mut self, acc: Vec2) {
-        self.acc = acc
     }
 
     pub fn rot(&self) -> f32 {
@@ -132,10 +116,6 @@ impl Ship {
 
     pub fn set_rot(&mut self, rot: f32) {
         self.rot = rot;
-    }
-
-    pub fn set_size(&mut self, size: f32) {
-        self.size = size;
     }
 
     pub fn collided(&self) -> bool {

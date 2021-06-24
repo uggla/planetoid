@@ -99,15 +99,12 @@ async fn main() {
     log::info!("Starting game.");
 
     let mut gameover = false;
+    #[cfg(not(target_arch = "wasm32"))]
     let mut host_msg_received: bool = false;
     let mut last_shot = get_time();
+    #[allow(unused_mut)]
     let mut sync_t: f64 = 0.0;
-    let mut players: Vec<Ship> = Vec::new();
-    players.push(Ship::new(String::from(&opt.name)));
-    // Temporary stuff for debugging
-    // players.push(Ship::new(String::from("Player 2")));
-    // players.push(Ship::new(String::from("Player 3")));
-    // players.push(Ship::new(String::from("Player 4")));
+    let mut players: Vec<Ship> = vec![Ship::new(String::from(&opt.name))];
 
     let mut asteroids: Asteroids = Asteroids::generate_field(opt.name.clone(), 0);
     if opt.mode == "host" {
@@ -194,31 +191,27 @@ async fn main() {
                 Err(mpsc::TryRecvError::Disconnected) => panic!("Disconnected"),
             };
 
-            if frame_count > 4 {
-                if opt.mode == "host" {
-                    tx_to_socket
-                        .send(serialize_host_data(
-                            &mut asteroids,
-                            &mut players,
-                            &mut gameover,
-                        ))
-                        .unwrap();
-                    frame_count = 0;
-                }
+            if frame_count > 4 && opt.mode == "host" {
+                tx_to_socket
+                    .send(serialize_host_data(
+                        &mut asteroids,
+                        &mut players,
+                        &mut gameover,
+                    ))
+                    .unwrap();
+                frame_count = 0;
             }
 
-            if host_msg_received {
-                if opt.mode == "guest" {
-                    for ship in players.iter() {
-                        if ship.name() == opt.name {
-                            tx_to_socket
-                                .send(serialize_guest_data(ship, &mut asteroids))
-                                .unwrap();
-                        }
+            if host_msg_received && opt.mode == "guest" {
+                for ship in players.iter() {
+                    if ship.name() == opt.name {
+                        tx_to_socket
+                            .send(serialize_guest_data(ship, &mut asteroids))
+                            .unwrap();
                     }
-                    host_msg_received = false;
-                    // frame_count = 0;
                 }
+                host_msg_received = false;
+                // frame_count = 0;
             }
         }
 
@@ -294,7 +287,6 @@ async fn main() {
             asteroid.update_pos();
         }
 
-        // if opt.mode == "host" {
         manage_collisions(
             &mut players,
             &mut asteroids,
@@ -304,7 +296,6 @@ async fn main() {
             frame_t,
             sync_t,
         );
-        // }
 
         if asteroids.is_empty() || players.is_empty() {
             gameover = true;

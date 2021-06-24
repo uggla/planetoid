@@ -46,6 +46,7 @@ struct GameData {
     gameover: bool,
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn deserialize_host_data(
     name: &str,
     mode: &str,
@@ -65,62 +66,41 @@ pub fn deserialize_host_data(
             asteroids.refresh_last_updated(get_time() - *sync_t);
         }
 
-        if mode == "host" {
-            if msg.contains("GuestData: ") {
-                let msg = msg.strip_prefix("GuestData: ").unwrap();
-                let guestdata: GuestData = serde_json::from_str(&msg).unwrap();
-                let opponent = guestdata.ship;
-                for ship in players.iter_mut() {
-                    if ship.name() == opponent.name() {
-                        *ship = opponent.clone();
-                    }
+        if mode == "host" && msg.contains("GuestData: ") {
+            let msg = msg.strip_prefix("GuestData: ").unwrap();
+            let guestdata: GuestData = serde_json::from_str(&msg).unwrap();
+            let opponent = guestdata.ship;
+            for ship in players.iter_mut() {
+                if ship.name() == opponent.name() {
+                    *ship = opponent.clone();
                 }
-                synchronize_asteroids(asteroids, guestdata.asteroids, "planetoid".to_string());
             }
+            synchronize_asteroids(asteroids, guestdata.asteroids);
         }
 
-        if mode != "host" {
-            if msg.contains("GameData: ") {
-                let msg = msg.strip_prefix("GameData: ").unwrap();
+        if mode != "host" && msg.contains("GameData: ") {
+            let msg = msg.strip_prefix("GameData: ").unwrap();
 
-                // asteroids.get_asteroids().clear();
-                // Backup current shit
-                let mut current_ship: Ship = Ship::new(name.to_string());
-                for ship in players.clone() {
-                    if ship.name() == name {
-                        current_ship = ship;
-                    }
+            // Backup player ship
+            let mut current_ship: Ship = Ship::new(name.to_string());
+            for ship in players.clone() {
+                if ship.name() == name {
+                    current_ship = ship;
                 }
-
-                let gamedata: GameData = serde_json::from_str(&msg).unwrap();
-                // *asteroids = gamedata.asteroids;
-                // if sync_t == &0. {
-                //     *asteroids = gamedata.asteroids;
-                // } else {
-                //     synchronize_asteroids(asteroids, gamedata.asteroids, "client".to_string());
-                // }
-                synchronize_asteroids(asteroids, gamedata.asteroids, "client".to_string());
-                *gameover = gamedata.gameover;
-                // for ship_index in 0..players.len() {
-                //     if players[ship_index].name() != name {
-                //         players[ship_index] = gamedata.players[ship_index].clone();
-                *players = gamedata.players;
-                // }
-                // }
-                // Restore current ship
-                for ship in players {
-                    if ship.name() == name {
-                        // ship.set_pos(current_ship.pos());
-                        // ship.set_vel(current_ship.vel());
-                        // ship.set_acc(current_ship.acc());
-                        // ship.set_rot(current_ship.rot());
-                        // ship.set_size(current_ship.size());
-                        // ship.set_collided(current_ship.collided());
-                        *ship = current_ship.clone();
-                    }
-                }
-                *host_msg_received = true;
             }
+
+            let gamedata: GameData = serde_json::from_str(&msg).unwrap();
+            synchronize_asteroids(asteroids, gamedata.asteroids);
+            *gameover = gamedata.gameover;
+            *players = gamedata.players;
+
+            // Restore current ship
+            for ship in players {
+                if ship.name() == name {
+                    *ship = current_ship.clone();
+                }
+            }
+            *host_msg_received = true;
         }
     }
 }

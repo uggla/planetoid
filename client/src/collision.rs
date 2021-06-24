@@ -28,16 +28,15 @@ pub fn manage_collisions(
         ship_vs_asteroids(ship, asteroids, name.clone(), god, mode, sync_t);
         ship_vs_opponents(ship, &mut opponents);
 
+        // Garbage collect bullets every 1.5s (bullets can almost cross the screen).
         ship.bullets
-            // .retain(|bullet| bullet.shot_at() + 1.5 > frame_t && !bullet.collided());
             .retain(|bullet| bullet.shot_at() + 1.5 > frame_t);
 
-        // TODO: asteroids must be retain after synchronization otherwise it causes issues.
+        // Garbage collect asteroids collided every 200ms.
+        // This is mandatory to keep the messages small and limit the bandwidth.
         asteroids.get_asteroids().retain(|_key, value| {
             (value.last_updated() + 0.2) > (get_time() - sync_t) || !value.collided()
         });
-        dbg!(get_time() - sync_t);
-        dbg!(&asteroids);
     }
 
     for ship_index in 0..players.len() {
@@ -65,6 +64,7 @@ fn ship_vs_asteroids(
         ship_bullet_vs_asteroid(ship, asteroid, &mut new_asteroids, sync_t);
     }
 
+    // Send new asteroids created only for this player.
     if ship.name() == name {
         for asteroid in new_asteroids {
             asteroids.add_asteroid(name.clone(), asteroid);
@@ -83,6 +83,7 @@ fn ship_bullet_vs_asteroid(
             asteroid.set_collided(true);
             asteroid.set_last_updated(get_time() - sync_t);
             bullet.set_collided(true);
+            // Split asteroid into 2 smaller parts except if we have a square.
             if asteroid.sides() > 4 {
                 *new_asteroids = Asteroid::new_split(
                     asteroid.pos(),
@@ -101,12 +102,6 @@ fn ship_bullet_vs_asteroid(
 fn ship_vs_opponents(ship: &mut Ship, opponents: &mut Vec<Ship>) {
     for opponent in opponents.iter_mut() {
         if opponent.name() != ship.name() {
-            // for bullet in ship.bullets.iter_mut() {
-            //     if is_collided(opponent, bullet) {
-            //         bullet.set_collided(true);
-            //         opponent.set_collided(true);
-            //     }
-            // }
             ship_bullet_vs_opponents(ship, opponent);
         }
     }
