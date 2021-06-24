@@ -17,12 +17,17 @@ The goal is to create a little multiplayer [asteriod](https://en.wikipedia.org/w
 
 This project is in an early stage, so a lot of features are missing and need to be implemented. However, as stated at the beginning, the goal is not to propose a real game but a demo to explain and share about these technologies.
 
+
+## Targeted infra overview
+![infra](images/infra.png)
+
 ## Project current status
-* Clients (native and wasm) can be built.
+* Clients (native and wasm) can be built and run. Wasm can only run solo mode.
 * Native client can share the game with a spectator. Spectator is another native client started in the spectator mode.
-* WIP add multiplayer.
+* Multiplayer game. Native client can be run as host and several guests can connect to destroy asteroids together.
 * WIP send player names to server to display current games.
 * WIP store games results.
+
 
 ## Authors
 
@@ -36,6 +41,10 @@ Native application:
 
 Running the wasm application into Firefox:
 ![App wasm32 screenshot](images/planetoid_wasm32.jpg)
+
+Multiplayer game:
+![multiplayer game screenshot](images/multiplayer_game.jpg)
+
 
 ## Run Locally (mainly for development purpose)
 
@@ -73,7 +82,6 @@ cd worker
 mvn compile quarkus:dev
 ```
 *Note: maven will download a lot of dependencies from the internet*
-
 
 ### Client
 
@@ -138,7 +146,7 @@ xdg-open http://127.0.0.1:4000
 
 ## Native client usage
 ```
-planetoid 0.1.0
+Planetoid 0.1.0
 Planetoid is a asteroid clone
 
 USAGE:
@@ -177,3 +185,10 @@ On the second terminal:
 `-n`: player name (default: planetoid)
 
 `cargo run -- -m host -dd -g -n Planetoid`
+
+#### Running in network mode with host and guest
+On the first terminal:
+`cargo run -- -m host -n Planetoid`
+
+On the second terminal:
+`cargo run -- -m guest -n "Planetoid spectator"`

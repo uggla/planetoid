@@ -25,7 +25,7 @@ use tungstenite::Message;
 use url::Url;
 
 #[derive(StructOpt, Debug)]
-#[structopt(name = "planetoid", version = "0.1.0")]
+#[structopt(name = "Planetoid", version = "0.1.0")]
 /// Planetoid is a asteroid clone
 
 struct Opt {
@@ -58,7 +58,7 @@ struct Opt {
     name: String,
 }
 
-const MAX_ASTEROIDS: usize = 1;
+const MAX_ASTEROIDS: usize = 10;
 
 fn window_conf() -> Conf {
     Conf {
