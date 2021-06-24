@@ -94,12 +94,12 @@ pub fn deserialize_host_data(
 
                 let gamedata: GameData = serde_json::from_str(&msg).unwrap();
                 // *asteroids = gamedata.asteroids;
-                if sync_t == &0. {
-                    *asteroids = gamedata.asteroids;
-                } else {
-                    synchronize_asteroids(asteroids, gamedata.asteroids, "client".to_string());
-                }
-                // *asteroids = gamedata.asteroids;
+                // if sync_t == &0. {
+                //     *asteroids = gamedata.asteroids;
+                // } else {
+                //     synchronize_asteroids(asteroids, gamedata.asteroids, "client".to_string());
+                // }
+                synchronize_asteroids(asteroids, gamedata.asteroids, "client".to_string());
                 *gameover = gamedata.gameover;
                 // for ship_index in 0..players.len() {
                 //     if players[ship_index].name() != name {
