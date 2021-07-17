@@ -10,7 +10,7 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
+  build_client_linux_and_wasm:
     name: Build
     runs-on: ubuntu-latest
 
@@ -54,12 +54,63 @@ jobs:
         tar zcvvf planetoid-linux-x86_64.tar.gz planetoid-linux-x86_64
         tar zcvvf planetoid-wasm.tar.gz planetoid-wasm
 
-    - uses: "marvinpinto/action-automatic-releases@latest"
-      name: Create a Github draft release
+    - name: 'Upload planetoid-linux-x86_64.tar.gz'
+      uses: actions/upload-artifact@v2
       with:
-        repo_token: "${{ secrets.GITHUB_TOKEN }}"
-        automatic_release_tag: lnxlatest
-        title: Planetoid client Linux and Wasm
-        files: |
-          planetoid-linux-x86_64.tar.gz
-          planetoid-wasm.tar.gz
+        name: planetoid-linux-x86_64.tar.gz
+        path: planetoid-linux-x86_64.tar.gz
+        retention-days: 1
+
+    - name: 'Upload planetoid-wasm.tar.gz'
+      uses: actions/upload-artifact@v2
+      with:
+        name: planetoid-wasm.tar.gz
+        path: planetoid-wasm.tar.gz
+        retention-days: 1
+    # - uses: "marvinpinto/action-automatic-releases@latest"
+    #   name: Create a Github draft release
+    #   with:
+    #     repo_token: "${{ secrets.GITHUB_TOKEN }}"
+    #     automatic_release_tag: lnxlatest
+    #     title: Planetoid client Linux and Wasm
+    #     files: |
+    #       planetoid-linux-x86_64.tar.gz
+    #       planetoid-wasm.tar.gz
+
+  build_client_windows:
+    name: Build
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Build for target x86_64-pc-windows-msvc
+      working-directory: ./client
+      run: cargo build
+
+    - name: Run tests
+      working-directory: ./client
+      run: cargo test
+
+    - name: Prepare produced files
+      run: |
+        new-item -Name planetoid-windows -ItemType directory
+        Copy-Item -Path "client\target\debug\planetoid.exe" -Destination "planetoid-windows"
+        Copy-Item -Path "client\sounds" -Destination "planetoid-windows" -Recurse
+        Compress-Archive -Path planetoid-windows -DestinationPath planetoid-windows.zip
+
+    - name: 'Upload planetoid-windows.zip'
+      uses: actions/upload-artifact@v2
+      with:
+        name: planetoid-windows.zip
+        path: planetoid-windows.zip
+        retention-days: 1
+
+    # - uses: "marvinpinto/action-automatic-releases@latest"
+    #   name: Create a Github draft release
+    #   with:
+    #     repo_token: "${{ secrets.GITHUB_TOKEN }}"
+    #     automatic_release_tag: winlatest
+    #     title: Planetoid client Windows
+    #     files: |
+    #       planetoid-windows.zip
