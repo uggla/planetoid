@@ -46,6 +46,10 @@ Multiplayer game:
 ![multiplayer game screenshot](images/multiplayer_game.jpg)
 
 
+## Binaries
+Binaries are available here:
+[Binary releases](https://github.com/uggla/planetoid/releases)
+
 ## Run Locally (mainly for development purpose)
 
 1. Clone the project
@@ -100,6 +104,11 @@ apt install pkg-config libx11-dev libxi-dev libgl1-mesa-dev libasound2-dev
 * Fedora system dependencies
 ```bash
 dnf install libX11-devel libXi-devel mesa-libGL-devel alsa-lib-devel
+```
+
+* Windows system
+```
+No dependencies are required for windows
 ```
 
 3. Go to the client directory and run the native client
