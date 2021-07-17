@@ -16,6 +16,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+
     - name: Install package dependencies
       run: sudo apt-get install -y pkg-config libx11-dev libxi-dev libgl1-mesa-dev libasound2-dev
 
@@ -41,3 +42,24 @@ jobs:
     - name: Run clippy for target wasm32-unknown-unknown
       working-directory: ./client
       run: cargo clippy --target wasm32-unknown-unknown >clippy.output 2>&1 ; cat clippy.output ;! egrep -q "warning|error:" clippy.output
+
+    - name: Prepare produced files
+      run: |
+        mkdir -p planetoid-linux-x86_64 planetoid-wasm
+        cp client/target/debug/planetoid planetoid-linux-x86_64
+        cp -r client/sounds planetoid-linux-x86_64
+        cp client/index.html planetoid-wasm
+        cp client/target/wasm32-unknown-unknown/debug/planetoid.wasm planetoid-wasm
+        cp -r client/sounds planetoid-wasm
+        tar zcvvf planetoid-linux-x86_64.tar.gz planetoid-linux-x86_64
+        tar zcvvf planetoid-wasm.tar.gz planetoid-wasm
+
+    - uses: "marvinpinto/action-automatic-releases@latest"
+      name: Create a Github draft release
+      with:
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        automatic_release_tag: lnxlatest
+        title: Planetoid client Linux and Wasm
+        files: |
+          planetoid-linux-x86_64.tar.gz
+          planetoid-wasm.tar.gz
