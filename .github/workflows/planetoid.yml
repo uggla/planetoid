@@ -67,15 +67,6 @@ jobs:
         name: planetoid-wasm.tar.gz
         path: planetoid-wasm.tar.gz
         retention-days: 1
-    # - uses: "marvinpinto/action-automatic-releases@latest"
-    #   name: Create a Github draft release
-    #   with:
-    #     repo_token: "${{ secrets.GITHUB_TOKEN }}"
-    #     automatic_release_tag: lnxlatest
-    #     title: Planetoid client Linux and Wasm
-    #     files: |
-    #       planetoid-linux-x86_64.tar.gz
-    #       planetoid-wasm.tar.gz
 
   build_client_windows:
     name: Build client windows
@@ -106,14 +97,6 @@ jobs:
         path: planetoid-windows.zip
         retention-days: 1
 
-    # - uses: "marvinpinto/action-automatic-releases@latest"
-    #   name: Create a Github draft release
-    #   with:
-    #     repo_token: "${{ secrets.GITHUB_TOKEN }}"
-    #     automatic_release_tag: winlatest
-    #     title: Planetoid client Windows
-    #     files: |
-    #       planetoid-windows.zip
   build_maven:
     name: Build server and worker
 
@@ -144,15 +127,6 @@ jobs:
         tar zcvvf planetoid-server.tar.gz planetoid-server
         tar zcvvf planetoid-worker.tar.gz planetoid-worker
 
-    # - uses: "marvinpinto/action-automatic-releases@latest"
-    #   name: Create a Github draft release
-    #   with:
-    #     repo_token: "${{ secrets.GITHUB_TOKEN }}"
-    #     automatic_release_tag: srvlatest
-    #     title: Planetoid server and worker
-    #     files: |
-    #       planetoid-server.tar.gz
-    #       planetoid-worker.tar.gz
     - name: 'Upload planetoid-server.tar.gz'
       uses: actions/upload-artifact@v2
       with:
@@ -180,12 +154,15 @@ jobs:
     - name: Download all workflow run artifacts
       uses: actions/download-artifact@v2
 
-    # - uses: "marvinpinto/action-automatic-releases@latest"
-    #   name: Create a Github draft release
-    #   with:
-    #     repo_token: "${{ secrets.GITHUB_TOKEN }}"
-    #     automatic_release_tag: srvlatest
-    #     title: Planetoid server and worker
-    #     files: |
-    #       planetoid-server.tar.gz
-    #       planetoid-worker.tar.gz
+    - uses: "marvinpinto/action-automatic-releases@latest"
+      name: Create a Github release
+      with:
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        automatic_release_tag: latest
+        title: Planetoid
+        files: |
+          planetoid-server.tar.gz
+          planetoid-worker.tar.gz
+          planetoid-windows.zip
+          planetoid-linux-x86_64.tar.gz
+          planetoid-wasm.tar.gz
