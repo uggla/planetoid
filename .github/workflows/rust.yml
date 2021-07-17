@@ -1,4 +1,4 @@
-name: Planetoid Linux and Wasm
+name: Planetoid
 
 on:
   push:
@@ -11,7 +11,7 @@ env:
 
 jobs:
   build_client_linux_and_wasm:
-    name: Build
+    name: Build clients Linux and Wasm
     runs-on: ubuntu-latest
 
     steps:
@@ -78,7 +78,7 @@ jobs:
     #       planetoid-wasm.tar.gz
 
   build_client_windows:
-    name: Build
+    name: Build client windows
     runs-on: windows-latest
 
     steps:
@@ -114,3 +114,78 @@ jobs:
     #     title: Planetoid client Windows
     #     files: |
     #       planetoid-windows.zip
+  build_maven:
+    name: Build server and worker
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up JDK 11
+      uses: actions/setup-java@v2
+      with:
+        java-version: '11'
+        distribution: 'adopt'
+
+    - name: Build server with Maven
+      working-directory: ./server
+      run: mvn package -Dquarkus.package.type=uber-jar
+
+    - name: Build worker with Maven
+      working-directory: ./worker
+      run: mvn package -Dquarkus.package.type=uber-jar
+
+    - name: Prepare produced files
+      run: |
+        mkdir -p planetoid-server planetoid-worker
+        cp server/target/planetoid-server-1.0.0-SNAPSHOT-runner.jar planetoid-server
+        cp worker/target/planetoid-worker-1.0.0-SNAPSHOT-runner.jar planetoid-worker
+        tar zcvvf planetoid-server.tar.gz planetoid-server
+        tar zcvvf planetoid-worker.tar.gz planetoid-worker
+
+    # - uses: "marvinpinto/action-automatic-releases@latest"
+    #   name: Create a Github draft release
+    #   with:
+    #     repo_token: "${{ secrets.GITHUB_TOKEN }}"
+    #     automatic_release_tag: srvlatest
+    #     title: Planetoid server and worker
+    #     files: |
+    #       planetoid-server.tar.gz
+    #       planetoid-worker.tar.gz
+    - name: 'Upload planetoid-server.tar.gz'
+      uses: actions/upload-artifact@v2
+      with:
+        name: planetoid-server.tar.gz
+        path: planetoid-server.tar.gz
+        retention-days: 1
+
+    - name: 'Upload planetoid-worker.tar.gz'
+      uses: actions/upload-artifact@v2
+      with:
+        name: planetoid-worker.tar.gz
+        path: planetoid-worker.tar.gz
+        retention-days: 1
+
+  create_github_release:
+    name: Create Github release
+
+    runs-on: ubuntu-latest
+
+    needs: [build_client_linux_and_wasm,build_client_windows,build_maven]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Download all workflow run artifacts
+      uses: actions/download-artifact@v2
+
+    # - uses: "marvinpinto/action-automatic-releases@latest"
+    #   name: Create a Github draft release
+    #   with:
+    #     repo_token: "${{ secrets.GITHUB_TOKEN }}"
+    #     automatic_release_tag: srvlatest
+    #     title: Planetoid server and worker
+    #     files: |
+    #       planetoid-server.tar.gz
+    #       planetoid-worker.tar.gz
