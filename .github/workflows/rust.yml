@@ -1,4 +1,4 @@
-name: Rust
+name: Planetoid Linux and Wasm
 
 on:
   push:
@@ -12,18 +12,12 @@ env:
 jobs:
   build:
     name: Build
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os:
-          - ubuntu-latest
-          - windows-latest
+    runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v2
     - name: Install package dependencies
       run: sudo apt-get install -y pkg-config libx11-dev libxi-dev libgl1-mesa-dev libasound2-dev
-      if: startsWith(matrix.os, 'ubuntu')
 
     - name: Build for target x86_64-unknown-linux-gnu
       working-directory: ./client
@@ -32,7 +26,6 @@ jobs:
     - name: Run clippy for target x86_64-unknown-linux-gnu
       working-directory: ./client
       run: cargo clippy >clippy.output 2>&1 ; cat clippy.output ;! egrep -q "warning|error:" clippy.output
-      if: startsWith(matrix.os, 'ubuntu')
 
     - name: Run tests
       working-directory: ./client
@@ -40,14 +33,11 @@ jobs:
 
     - name: Add wasm32-unknown-unknown target
       run: rustup target add wasm32-unknown-unknown
-      if: startsWith(matrix.os, 'ubuntu')
 
     - name: Build for target wasm32-unknown-unknown
       working-directory: ./client
       run: cargo build --target wasm32-unknown-unknown
-      if: startsWith(matrix.os, 'ubuntu')
 
     - name: Run clippy for target wasm32-unknown-unknown
       working-directory: ./client
       run: cargo clippy --target wasm32-unknown-unknown >clippy.output 2>&1 ; cat clippy.output ;! egrep -q "warning|error:" clippy.output
-      if: startsWith(matrix.os, 'ubuntu')
