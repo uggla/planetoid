@@ -407,17 +407,6 @@ mod tests {
 
     use super::*;
 
-    fn window_conf() -> Conf {
-        Conf {
-            window_title: String::from("Planetoid"),
-            fullscreen: false,
-            window_width: 1024,
-            window_height: 768,
-            window_resizable: false,
-            ..Default::default()
-        }
-    }
-
     #[test]
     fn asteroid_serialize_deserialize_test() {
         let asteroid = Asteroid {
@@ -672,22 +661,4 @@ mod tests {
             10.
         );
     }
-
-    // #[test]
-    // fn generate_field_nb_item_test() {
-    //     async fn amain() {
-    //         let field = Asteroids::generate_field("planetoid".to_string(), 3);
-    //         assert_eq!(field.count, 3);
-    //         assert_eq!(field.asteroids.len(), 3);
-
-    //         let field = Asteroids::generate_field("planetoid".to_string(), 3);
-    //         let mut keys: Vec<&String> = field.asteroids.keys().collect();
-    //         keys.sort();
-    //         assert_eq!(
-    //             keys,
-    //             ["planetoid_000000", "planetoid_000001", "planetoid_000002"]
-    //         );
-    //     }
-    //     macroquad::Window::from_config(window_conf(), amain());
-    // }
 }
