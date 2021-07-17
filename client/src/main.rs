@@ -13,7 +13,7 @@ use crate::network::{
     connect_stream, connect_ws, deserialize_host_data, serialize_guest_data, serialize_host_data,
 };
 use crate::{gameover::manage_gameover, ship::Ship};
-use macroquad::prelude::*;
+use macroquad::{audio, prelude::*};
 #[cfg(not(target_arch = "wasm32"))]
 use simple_logger::SimpleLogger;
 #[cfg(not(target_arch = "wasm32"))]
@@ -102,6 +102,13 @@ async fn main() {
     #[cfg(not(target_arch = "wasm32"))]
     let mut host_msg_received: bool = false;
     let mut last_shot = get_time();
+    let mut thrust_t = get_time();
+
+    set_pc_assets_folder("sounds");
+    let laser_sound = audio::load_sound("laser.wav").await.unwrap();
+    let thrust_sound = audio::load_sound("thrust.wav").await.unwrap();
+    let explosion_sound = audio::load_sound("explosion.wav").await.unwrap();
+
     #[allow(unused_mut)]
     let mut sync_t: f64 = 0.0;
     let mut players: Vec<Ship> = vec![Ship::new(String::from(&opt.name))];
@@ -242,6 +249,10 @@ async fn main() {
                 for ship in players.iter_mut() {
                     if ship.name() == opt.name {
                         ship.accelerate();
+                        if frame_t - thrust_t > 0.5 {
+                            audio::play_sound_once(thrust_sound);
+                            thrust_t = frame_t;
+                        }
                     }
                 }
             }
@@ -250,6 +261,7 @@ async fn main() {
                 for ship in players.iter_mut() {
                     if ship.name() == opt.name {
                         ship.shoot(frame_t);
+                        audio::play_sound_once(laser_sound);
                     }
                 }
                 last_shot = frame_t;
@@ -296,6 +308,10 @@ async fn main() {
             frame_t,
             sync_t,
         );
+
+        if !players.iter().any(|ship| ship.name() == opt.name) {
+            audio::play_sound_once(explosion_sound);
+        }
 
         if asteroids.is_empty() || players.is_empty() {
             gameover = true;
