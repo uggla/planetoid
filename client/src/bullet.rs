@@ -5,6 +5,7 @@ use serde::ser::{SerializeStruct, Serializer};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
+#[derive(Debug)]
 pub struct Bullet {
     pos: Vec2,
     vel: Vec2,

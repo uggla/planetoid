@@ -29,8 +29,12 @@ pub fn manage_collisions(
         ship_vs_opponents(ship, &mut opponents);
 
         // Garbage collect bullets every 1.5s (bullets can almost cross the screen).
-        ship.bullets
-            .retain(|bullet| bullet.shot_at() + 1.5 > frame_t);
+        // This needs to be done only on the local ship as frame_t make sens only for the local
+        // data
+        if ship.name() == name {
+            ship.bullets
+                .retain(|bullet| bullet.shot_at() + 1.5 > frame_t);
+        }
 
         // Garbage collect asteroids collided every 200ms.
         // This is mandatory to keep the messages small and limit the bandwidth.
@@ -44,7 +48,8 @@ pub fn manage_collisions(
             players[ship_index].set_collided(true);
         }
     }
-
+    // Garbage collect ship collided.
+    // So remove collided ship from the list
     players.retain(|ship| !ship.collided());
 }
 

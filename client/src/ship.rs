@@ -6,6 +6,7 @@ use serde::ser::{SerializeStruct, Serializer};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
+#[derive(Debug)]
 pub struct Ship {
     name: String,
     pos: Vec2,
