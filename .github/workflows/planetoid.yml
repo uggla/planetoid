@@ -99,7 +99,6 @@ jobs:
 
   build_maven:
     name: Build server and worker
-
     runs-on: ubuntu-latest
 
     steps:
@@ -143,9 +142,8 @@ jobs:
 
   create_github_release:
     name: Create Github release
-
     runs-on: ubuntu-latest
-
+    if: github.ref == 'refs/heads/main'
     needs: [build_client_linux_and_wasm,build_client_windows,build_maven]
 
     steps:
