@@ -79,7 +79,7 @@ fn get_log_level(debug_occurence: u8) -> log::LevelFilter {
         1 => log::LevelFilter::Info,
         2 => log::LevelFilter::Debug,
         3 => log::LevelFilter::Trace,
-        _ => log::LevelFilter::Trace,
+        _ => log::LevelFilter::Error,
     }
 }
 
@@ -131,6 +131,8 @@ async fn main() {
         ))
         .expect("Cannot parse url.");
 
+        // Thread to manage network web socket
+        // This thread uses a channel to pass messages to the main thread (game)
         thread::spawn(move || {
             let stream: TcpStream = connect_stream(&url);
             let (mut socket, _response) = connect_ws(url, &stream).unwrap();
@@ -151,6 +153,7 @@ async fn main() {
         });
 
         if opt.mode != "host" {
+            // TODO: Extract the following code into function. As this is also required to restart the game after a gameover.
             log::info!("Waiting synchronization data");
             loop {
                 let msg = rx_from_socket.recv().unwrap();
@@ -178,9 +181,14 @@ async fn main() {
 
     let mut frame_count: u32 = 0;
     let time_before_entering_loop = get_time();
+    
+    // Game loop
     loop {
         #[cfg(not(target_arch = "wasm32"))]
         if !opt.solo {
+            // Currently this is treating messages received one by one every frame (16ms)
+            // TODO: Treat all messages in the queue to avoid delaying messages if we have a lot of guests.
+            // TODO: Maybe extract this code into function.
             let _received = match rx_from_socket.try_recv() {
                 Ok(msg) => {
                     deserialize_host_data(
@@ -221,7 +229,7 @@ async fn main() {
                 // frame_count = 0;
             }
         }
-
+        
         if gameover {
             manage_gameover(
                 &mut players,
@@ -340,6 +348,7 @@ async fn main() {
             }
         }
 
+        // TODO: Add an optional fps counter on the main screen
         log::trace!("{} fps", get_fps());
         next_frame().await;
         frame_count += 1;
