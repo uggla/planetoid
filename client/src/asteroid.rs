@@ -62,6 +62,8 @@ pub fn synchronize_asteroids(field1: &mut Asteroids, field2: Asteroids) {
             }
 
             Some(value_field1) => {
+                // TODO: Do not update if asteroid is already collided (might remove some synchronization issue).
+                // Write a test to validate this.
                 if value_field2.last_updated() > value_field1.last_updated() {
                     *field1.asteroids.get_mut(key_field2).unwrap() = value_field2.clone();
                 }
