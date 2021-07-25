@@ -29,8 +29,8 @@ pub fn manage_collisions(
         ship_vs_opponents(ship, &mut opponents);
 
         // Garbage collect bullets every 1.5s (bullets can almost cross the screen).
-        // This needs to be done only on the local ship as frame_t make sens only for the local
-        // data
+        // This needs to be done only on the local ship as frame_t make sens
+        // only for the local data
         if ship.name() == name {
             ship.bullets
                 .retain(|bullet| bullet.shot_at() + 1.5 > frame_t);

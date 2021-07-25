@@ -53,6 +53,10 @@ struct Opt {
     #[structopt(short, long, conflicts_with = "mode")]
     solo: bool,
 
+    /// Display fps
+    #[structopt(short, long)]
+    fps: bool,
+
     /// Player name
     #[structopt(short, long, default_value = "planetoid")]
     name: String,
@@ -83,6 +87,16 @@ fn get_log_level(debug_occurence: u8) -> log::LevelFilter {
     }
 }
 
+fn display_fps(fps: &mut i32, frame_t: f64, fps_refresh: &mut f64) {
+    if frame_t - *fps_refresh > 0.2 {
+        *fps = get_fps();
+        *fps_refresh = frame_t;
+    }
+    let text = format!("{} fps", fps);
+    let font_size = 30.;
+    draw_text(&text, 5., 20., font_size, DARKGRAY)
+}
+
 #[macroquad::main(window_conf)]
 async fn main() {
     // Seed random generator
@@ -98,11 +112,16 @@ async fn main() {
     log::debug!("{:#?}", opt);
     log::info!("Starting game.");
 
+    let mut show_fps = opt.fps;
+    let mut fps: i32 = 0;
     let mut gameover = false;
     #[cfg(not(target_arch = "wasm32"))]
     let mut host_msg_received: bool = false;
-    let mut last_shot = get_time();
+    // Timing values
+    let mut lastshot_t = get_time();
     let mut thrust_t = get_time();
+    let mut fps_t = get_time();
+    let mut debounce_t = get_time();
 
     set_pc_assets_folder("sounds");
     let laser_sound = audio::load_sound("laser.wav").await.unwrap();
@@ -181,7 +200,7 @@ async fn main() {
 
     let mut frame_count: u32 = 0;
     let time_before_entering_loop = get_time();
-    
+
     // Game loop
     loop {
         #[cfg(not(target_arch = "wasm32"))]
@@ -229,7 +248,7 @@ async fn main() {
                 // frame_count = 0;
             }
         }
-        
+
         if gameover {
             manage_gameover(
                 &mut players,
@@ -265,14 +284,14 @@ async fn main() {
                 }
             }
 
-            if is_key_down(KeyCode::Space) && frame_t - last_shot > 0.1 {
+            if is_key_down(KeyCode::Space) && frame_t - lastshot_t > 0.1 {
                 for ship in players.iter_mut() {
                     if ship.name() == opt.name {
                         ship.shoot(frame_t);
                         audio::play_sound_once(laser_sound);
                     }
                 }
-                last_shot = frame_t;
+                lastshot_t = frame_t;
             }
 
             if is_key_down(KeyCode::Right) {
@@ -289,6 +308,15 @@ async fn main() {
                 }
             }
         }
+        if is_key_down(KeyCode::F) && frame_t - debounce_t > 0.2 {
+            if show_fps == true {
+                show_fps = false;
+            } else {
+                show_fps = true;
+            }
+            debounce_t = frame_t;
+        }
+
         if is_key_down(KeyCode::Escape) {
             break;
         }
@@ -348,8 +376,10 @@ async fn main() {
             }
         }
 
-        // TODO: Add an optional fps counter on the main screen
         log::trace!("{} fps", get_fps());
+        if show_fps {
+            display_fps(&mut fps, frame_t, &mut fps_t);
+        }
         next_frame().await;
         frame_count += 1;
     }
