@@ -6,12 +6,12 @@ mod gameover;
 mod network;
 mod screen;
 mod ship;
-use crate::asteroid::Asteroids;
 use crate::collision::manage_collisions;
 #[cfg(not(target_arch = "wasm32"))]
 use crate::network::{
     connect_stream, connect_ws, deserialize_host_data, serialize_guest_data, serialize_host_data,
 };
+use crate::{asteroid::Asteroids, network::wait_synchronization_data};
 use crate::{gameover::manage_gameover, ship::Ship};
 use macroquad::{audio, prelude::*};
 #[cfg(not(target_arch = "wasm32"))]
@@ -171,31 +171,43 @@ async fn main() {
             }
         });
 
-        if opt.mode != "host" {
-            // TODO: Extract the following code into function. As this is also required to restart the game after a gameover.
-            log::info!("Waiting synchronization data");
-            loop {
-                let msg = rx_from_socket.recv().unwrap();
-                deserialize_host_data(
-                    &opt.name,
-                    &opt.mode,
-                    msg,
-                    &mut asteroids,
-                    &mut players,
-                    &mut gameover,
-                    &mut host_msg_received,
-                    &mut sync_t,
-                );
-                if !asteroids.is_empty() {
-                    break;
-                }
-            }
-            if opt.mode == "guest" {
-                tx_to_socket
-                    .send(format!("Hello from {}", opt.name))
-                    .unwrap();
-            }
-        }
+        // if opt.mode != "host" {
+        //     // TODO: Extract the following code into function. As this is also required to restart the game after a gameover.
+        //     log::info!("Waiting synchronization data");
+        //     loop {
+        //         let msg = rx_from_socket.recv().unwrap();
+        //         deserialize_host_data(
+        //             &opt.name,
+        //             &opt.mode,
+        //             msg,
+        //             &mut asteroids,
+        //             &mut players,
+        //             &mut gameover,
+        //             &mut host_msg_received,
+        //             &mut sync_t,
+        //         );
+        //         if !asteroids.is_empty() {
+        //             break;
+        //         }
+        //     }
+
+        //     if opt.mode == "guest" {
+        //         tx_to_socket
+        //             .send(format!("Hello from {}", opt.name))
+        //             .unwrap();
+        //     }
+        // }
+        wait_synchronization_data(
+            &rx_from_socket,
+            &tx_to_socket,
+            &opt.name,
+            &opt.mode,
+            &mut asteroids,
+            &mut players,
+            &mut gameover,
+            &mut host_msg_received,
+            &mut sync_t,
+        );
     }
 
     let mut frame_count: u32 = 0;

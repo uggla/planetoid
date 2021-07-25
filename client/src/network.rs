@@ -2,6 +2,7 @@ use crate::asteroid::synchronize_asteroids;
 use crate::{asteroid::Asteroids, ship::Ship};
 use macroquad::prelude::get_time;
 use serde::{Deserialize, Serialize};
+use std::sync::mpsc::{Receiver, Sender};
 use std::{
     error::Error,
     net::{TcpStream, ToSocketAddrs},
@@ -131,4 +132,42 @@ pub fn serialize_guest_data(ship: &Ship, asteroids: &mut Asteroids) -> String {
         ship: ship.clone(),
     };
     format!("GuestData: {}", serde_json::to_string(&guestdata).unwrap())
+}
+
+#[allow(clippy::too_many_arguments)]
+pub fn wait_synchronization_data(
+    rx_from_socket: &Receiver<Message>,
+    tx_to_socket: &Sender<String>,
+    name: &str,
+    mode: &str,
+    asteroids: &mut Asteroids,
+    players: &mut Vec<Ship>,
+    gameover: &mut bool,
+    host_msg_received: &mut bool,
+    sync_t: &mut f64,
+) {
+    if mode != "host" {
+        // TODO: Extract the following code into function. As this is also required to restart the game after a gameover.
+        log::info!("Waiting synchronization data");
+        loop {
+            let msg = rx_from_socket.recv().unwrap();
+            deserialize_host_data(
+                name,
+                mode,
+                msg,
+                asteroids,
+                players,
+                gameover,
+                host_msg_received,
+                sync_t,
+            );
+            if !asteroids.is_empty() {
+                break;
+            }
+        }
+
+        if mode == "guest" {
+            tx_to_socket.send(format!("Hello from {}", name)).unwrap();
+        }
+    }
 }
