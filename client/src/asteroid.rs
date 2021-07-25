@@ -62,9 +62,9 @@ pub fn synchronize_asteroids(field1: &mut Asteroids, field2: Asteroids) {
             }
 
             Some(value_field1) => {
-                // TODO: Do not update if asteroid is already collided (might remove some synchronization issue).
-                // Write a test to validate this.
-                if value_field2.last_updated() > value_field1.last_updated() {
+                if !value_field1.collided
+                    && value_field2.last_updated() > value_field1.last_updated()
+                {
                     *field1.asteroids.get_mut(key_field2).unwrap() = value_field2.clone();
                 }
             }
@@ -662,5 +662,38 @@ mod tests {
             field.asteroids.get("f1_000002").unwrap().last_updated(),
             10.
         );
+    }
+
+    #[test]
+    fn asteroid_synchronize_asteroid_already_collided_test() {
+        let mut asteroid1 = Asteroid::new_pos_and_size(0., 0., 10.);
+        let mut asteroid2 = Asteroid::new_pos_and_size(0., 0., 10.);
+        let mut asteroid3 = Asteroid::new_pos_and_size(0., 0., 10.);
+        asteroid1.set_last_updated(0.0);
+        asteroid2.set_last_updated(2.0);
+        asteroid2.set_collided(true);
+        asteroid3.set_last_updated(50.0);
+
+        let asteroids = BTreeMap::new();
+        let asteroids_c = asteroids.clone();
+
+        let mut field1 = Asteroids {
+            count: 0,
+            asteroids,
+        };
+
+        let mut field2 = Asteroids {
+            count: 0,
+            asteroids: asteroids_c,
+        };
+
+        field1.add_asteroid("f1".to_string(), asteroid1.clone());
+        field1.add_asteroid("f1".to_string(), asteroid2.clone());
+        field2.add_asteroid("f1".to_string(), asteroid1.clone());
+        field2.add_asteroid("f1".to_string(), asteroid3.clone());
+
+        synchronize_asteroids(&mut field1, field2);
+        assert!(field1.asteroids.get("f1_000000").unwrap() == &asteroid1);
+        assert!(field1.asteroids.get("f1_000001").unwrap() == &asteroid2);
     }
 }
