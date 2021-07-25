@@ -309,7 +309,7 @@ async fn main() {
             }
         }
         if is_key_down(KeyCode::F) && frame_t - debounce_t > 0.2 {
-            if show_fps == true {
+            if show_fps {
                 show_fps = false;
             } else {
                 show_fps = true;
