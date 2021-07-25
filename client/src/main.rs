@@ -205,25 +205,25 @@ async fn main() {
     loop {
         #[cfg(not(target_arch = "wasm32"))]
         if !opt.solo {
-            // Currently this is treating messages received one by one every frame (16ms)
-            // TODO: Treat all messages in the queue to avoid delaying messages if we have a lot of guests.
             // TODO: Maybe extract this code into function.
-            let _received = match rx_from_socket.try_recv() {
-                Ok(msg) => {
-                    deserialize_host_data(
-                        &opt.name,
-                        &opt.mode,
-                        msg,
-                        &mut asteroids,
-                        &mut players,
-                        &mut gameover,
-                        &mut host_msg_received,
-                        &mut sync_t,
-                    );
-                }
-                Err(mpsc::TryRecvError::Empty) => (),
-                Err(mpsc::TryRecvError::Disconnected) => panic!("Disconnected"),
-            };
+            loop {
+                let _received = match rx_from_socket.try_recv() {
+                    Ok(msg) => {
+                        deserialize_host_data(
+                            &opt.name,
+                            &opt.mode,
+                            msg,
+                            &mut asteroids,
+                            &mut players,
+                            &mut gameover,
+                            &mut host_msg_received,
+                            &mut sync_t,
+                        );
+                    }
+                    Err(mpsc::TryRecvError::Empty) => (break),
+                    Err(mpsc::TryRecvError::Disconnected) => panic!("Disconnected"),
+                };
+            }
 
             if frame_count > 4 && opt.mode == "host" {
                 tx_to_socket
