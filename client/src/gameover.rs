@@ -5,6 +5,7 @@ use macroquad::prelude::*;
 use crate::asteroid::Asteroids;
 use crate::ship::Ship;
 
+#[allow(clippy::too_many_arguments)]
 pub fn manage_gameover(
     players: &mut Vec<Ship>,
     asteroids: &mut Asteroids,
@@ -25,7 +26,7 @@ pub fn manage_gameover(
 
     if asteroids.is_empty() {
         status = "You win !";
-        audio::play_sound_once(victory_sound.clone());
+        audio::play_sound_once(*victory_sound);
     }
 
     if mode == "host" {
