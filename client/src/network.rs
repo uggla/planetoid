@@ -147,7 +147,6 @@ pub fn wait_synchronization_data(
     sync_t: &mut f64,
 ) {
     if mode != "host" {
-        // TODO: Extract the following code into function. As this is also required to restart the game after a gameover.
         log::info!("Waiting synchronization data");
         loop {
             let msg = rx_from_socket.recv().unwrap();
