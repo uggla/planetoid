@@ -129,6 +129,8 @@ async fn main() {
     let laser_sound = audio::load_sound("laser.wav").await.unwrap();
     let thrust_sound = audio::load_sound("thrust.wav").await.unwrap();
     let explosion_sound = audio::load_sound("explosion.wav").await.unwrap();
+    let victory_sound = audio::load_sound("victory.wav").await.unwrap();
+    let mut explosion_sound_played = false;
 
     #[allow(unused_mut)]
     let mut sync_t: f64 = 0.0;
@@ -193,7 +195,6 @@ async fn main() {
     loop {
         #[cfg(not(target_arch = "wasm32"))]
         if !opt.solo {
-            // TODO: Maybe extract this code into function.
             loop {
                 let _received = match rx_from_socket.try_recv() {
                     Ok(msg) => {
@@ -259,6 +260,8 @@ async fn main() {
                 &mut frame_count,
                 &mut gameover,
                 &mut gameover_msg_sent,
+                &mut explosion_sound_played,
+                &victory_sound,
             );
 
             // Display frame but do not increase frame_count to not send new messages
@@ -291,7 +294,7 @@ async fn main() {
         if opt.mode != "spectator" {
             if is_key_down(KeyCode::Up) {
                 for ship in players.iter_mut() {
-                    if ship.name() == opt.name {
+                    if ship.name() == opt.name && !ship.collided() {
                         ship.accelerate();
                         if frame_t - thrust_t > 0.5 {
                             audio::play_sound_once(thrust_sound);
@@ -303,7 +306,7 @@ async fn main() {
 
             if is_key_down(KeyCode::Space) && frame_t - lastshot_t > 0.1 {
                 for ship in players.iter_mut() {
-                    if ship.name() == opt.name {
+                    if ship.name() == opt.name && !ship.collided() {
                         ship.shoot(frame_t);
                         audio::play_sound_once(laser_sound);
                     }
@@ -313,13 +316,13 @@ async fn main() {
 
             if is_key_down(KeyCode::Right) {
                 for ship in players.iter_mut() {
-                    if ship.name() == opt.name {
+                    if ship.name() == opt.name && !ship.collided() {
                         ship.set_rot(ship.rot() + 5.);
                     }
                 }
             } else if is_key_down(KeyCode::Left) {
                 for ship in players.iter_mut() {
-                    if ship.name() == opt.name {
+                    if ship.name() == opt.name && !ship.collided() {
                         ship.set_rot(ship.rot() - 5.);
                     }
                 }
@@ -362,11 +365,15 @@ async fn main() {
             sync_t,
         );
 
-        if !players.iter().any(|ship| ship.name() == opt.name) {
+        if players
+            .iter()
+            .any(|ship| ship.name() == opt.name && ship.collided() && !explosion_sound_played)
+        {
             audio::play_sound_once(explosion_sound);
+            explosion_sound_played = true;
         }
 
-        if asteroids.is_empty() || players.is_empty() {
+        if asteroids.is_empty() || players.iter().all(|ship| ship.collided()) {
             gameover = true;
         }
 
@@ -386,10 +393,12 @@ async fn main() {
         }
 
         for ship in &players {
-            if ship.name() == opt.name {
-                ship.draw(BLACK);
-            } else {
-                ship.draw(RED);
+            if !ship.collided() {
+                if ship.name() == opt.name {
+                    ship.draw(BLACK);
+                } else {
+                    ship.draw(RED);
+                }
             }
         }
 

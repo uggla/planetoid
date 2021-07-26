@@ -48,9 +48,6 @@ pub fn manage_collisions(
             players[ship_index].set_collided(true);
         }
     }
-    // Garbage collect ship collided.
-    // So remove collided ship from the list
-    players.retain(|ship| !ship.collided());
 }
 
 fn ship_vs_asteroids(

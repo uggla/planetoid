@@ -1,4 +1,5 @@
 use crate::MAX_ASTEROIDS;
+use macroquad::audio::{self, Sound};
 use macroquad::prelude::*;
 
 use crate::asteroid::Asteroids;
@@ -12,16 +13,19 @@ pub fn manage_gameover(
     frame_count: &mut u32,
     gameover: &mut bool,
     gameover_msg_sent: &mut bool,
+    explosion_sound_played: &mut bool,
+    victory_sound: &Sound,
 ) {
     // Take care this part is executed in a loop !
     // host is looping until the enter key is pressed
     clear_background(LIGHTGRAY);
-    let mut status = "You Win!.";
+    let mut status = "Game over.";
     let text: String;
     let font_size = 30.;
 
-    if !asteroids.is_empty() {
-        status = "Game Over.";
+    if asteroids.is_empty() {
+        status = "You win !";
+        audio::play_sound_once(victory_sound.clone());
     }
 
     if mode == "host" {
@@ -45,6 +49,7 @@ pub fn manage_gameover(
         *gameover = false;
         *gameover_msg_sent = false;
         *asteroids = Asteroids::generate_field(String::from(name), 0);
+        *explosion_sound_played = false;
         if mode == "host" {
             *asteroids = Asteroids::generate_field(String::from(name), MAX_ASTEROIDS);
         }
