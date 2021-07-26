@@ -23,16 +23,21 @@ This project is in an early stage, so a lot of features are missing and need to 
 
 ## Project current status
 * Clients (native and wasm) can be built and run. Wasm can only run solo mode.
-* Native client can share the game with a spectator. Spectator is another native client started in the spectator mode.
-* Multiplayer game. Native client can be run as host and several guests can connect to destroy asteroids together.
-* WIP send player names to server to display current games.
-* WIP store games results.
+* Worker allows to play multiplayer game:
+    * Native client can share the game with a spectator. Spectator is another native client started in the spectator mode.
+    * Multiplayer game. Native client can be run as host and several guests can connect to destroy asteroids together.
+* Server is a WIP, this is currently just exposing 2 tables with hibernate/panache and a couple of api routes.
 
 
 ## Authors
 
 - [@Uggla](https://www.github.com/Uggla)
 
+## Game controls
+* `Right` and `left` arrow keys to turn the ship right and left.
+* `Space` key to shoot.
+* `F` key to display fps.
+* `Esc` key to quit the game.
 
 ## Screenshots
 
@@ -200,4 +205,4 @@ On the first terminal:
 `cargo run -- -m host -n Planetoid`
 
 On the second terminal:
-`cargo run -- -m guest -n "Planetoid spectator"`
+`cargo run -- -m guest -n "Planetoid guest"`
