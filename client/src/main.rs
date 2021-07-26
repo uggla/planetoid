@@ -238,7 +238,8 @@ async fn main() {
 
         if gameover {
             // Send a last message to all guests that the game is over
-            if opt.mode == "host" && !gameover_msg_sent {
+            #[cfg(not(target_arch = "wasm32"))]
+            if !opt.solo && opt.mode == "host" && !gameover_msg_sent {
                 tx_to_socket
                     .send(serialize_host_data(
                         &mut asteroids,
@@ -260,12 +261,11 @@ async fn main() {
                 &mut gameover_msg_sent,
             );
 
-            // if is_key_down(KeyCode::Escape) {
-            //     break;
-            // }
-
+            // Display frame but do not increase frame_count to not send new messages
             next_frame().await;
 
+            // Guest will be blocked waiting for the next message from the host
+            // The host will send a new message as soon as the user will hit enter
             #[cfg(not(target_arch = "wasm32"))]
             if !opt.solo {
                 wait_synchronization_data(
