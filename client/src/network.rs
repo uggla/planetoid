@@ -69,7 +69,7 @@ pub fn deserialize_host_data(
 
         if mode == "host" && msg.contains("GuestData: ") {
             let msg = msg.strip_prefix("GuestData: ").unwrap();
-            let guestdata: GuestData = serde_json::from_str(&msg).unwrap();
+            let guestdata: GuestData = serde_json::from_str(msg).unwrap();
             let opponent = guestdata.ship;
             for ship in players.iter_mut() {
                 if ship.name() == opponent.name() {
@@ -90,7 +90,7 @@ pub fn deserialize_host_data(
                 }
             }
 
-            let gamedata: GameData = serde_json::from_str(&msg).unwrap();
+            let gamedata: GameData = serde_json::from_str(msg).unwrap();
             synchronize_asteroids(asteroids, gamedata.asteroids);
             *gameover = gamedata.gameover;
             *players = gamedata.players;
