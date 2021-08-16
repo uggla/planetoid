@@ -19,6 +19,7 @@ use macroquad::{audio, prelude::*};
 use simple_logger::SimpleLogger;
 #[cfg(not(target_arch = "wasm32"))]
 use std::{net::TcpStream, sync::mpsc, thread, thread::sleep, time::Duration};
+use structopt::clap::{crate_name, crate_version};
 use structopt::StructOpt;
 #[cfg(not(target_arch = "wasm32"))]
 use tungstenite::Message;
@@ -26,11 +27,11 @@ use tungstenite::Message;
 use url::Url;
 
 #[derive(StructOpt, Debug)]
-#[structopt(name = "Planetoid", version = "0.1.0")]
-/// Planetoid is a asteroid clone
+#[structopt(name = crate_name!(), version = crate_version!())]
+/// Planetoid is an asteroid clone
 
 struct Opt {
-    /// Debug mode (_ (error), -d (info), -dd (debug), -ddd (trace))
+    /// Debug mode (ϕ (error), -d (info), -dd (debug), -ddd (trace))
     #[structopt(short, long, parse(from_occurrences))]
     debug: u8,
 
