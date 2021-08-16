@@ -121,7 +121,7 @@ jobs:
 
 
   build_client_windows:
-    name: Build client windows
+    name: Build client Windows
     runs-on: windows-latest
 
     steps:
