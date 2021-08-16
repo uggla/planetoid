@@ -68,6 +68,35 @@ jobs:
         path: planetoid-wasm.tar.gz
         retention-days: 1
 
+  build_client_macos:
+    name: Build clients MacOS
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Build for target x86_64-apple-darwin
+      working-directory: ./client
+      run: cargo build
+
+    - name: Run tests
+      working-directory: ./client
+      run: cargo test
+
+    - name: Prepare produced files
+      run: |
+        mkdir -p planetoid-macos-x86_64
+        cp client/target/debug/planetoid planetoid-macos-x86_64
+        cp -r client/sounds planetoid-macos-x86_64
+        tar zcvvf planetoid-macos-x86_64.tar.gz planetoid-macos-x86_64
+
+    - name: 'Upload planetoid-macos-x86_64.tar.gz'
+      uses: actions/upload-artifact@v2
+      with:
+        name: planetoid-macos-x86_64.tar.gz
+        path: planetoid-macos-x86_64.tar.gz
+        retention-days: 1
+
   build_client_windows:
     name: Build client windows
     runs-on: windows-latest
@@ -144,7 +173,7 @@ jobs:
     name: Create Github release
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
-    needs: [build_client_linux_and_wasm,build_client_windows,build_maven]
+    needs: [build_client_linux_and_wasm, build_client_windows, build_client_macos, build_maven]
 
     steps:
     - uses: actions/checkout@v2
@@ -163,4 +192,5 @@ jobs:
           planetoid-worker.tar.gz
           planetoid-windows.zip
           planetoid-linux-x86_64.tar.gz
+          planetoid-macos-x86_64.tar.gz
           planetoid-wasm.tar.gz
