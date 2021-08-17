@@ -36,7 +36,9 @@
 import { defineComponent } from "vue";
 import seriesService from "@/services/series.service";
 import pokemonService from "@/services/pokemon.service";
+import playersService from "@/services/players.service";
 import PokemonData from "@/services/pokemon.service";
+import Players from "@/services/players.service";
 import { ref, onMounted } from "vue";
 
 export default defineComponent({
@@ -48,6 +50,7 @@ export default defineComponent({
     const pokemon_name = "pikachu";
     const series = ref([] as unknown);
     const pokemon = ref(PokemonData);
+    const players = ref(Players);
 
     onMounted(() => {
       pokemonService.fetchPokemon(pokemon_name).then((p) => {
@@ -60,9 +63,19 @@ export default defineComponent({
         console.log(s);
         series.value = s;
       });
+
+      playersService.fetchPlayers().then(
+        (p) => {
+          console.log(p);
+        },
+        function (error) {
+          console.log("Error:");
+          console.log(error);
+        }
+      );
     });
 
-    return { series, pokemon };
+    return { series, pokemon, players };
   },
 });
 </script>
