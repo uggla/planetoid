@@ -87,6 +87,8 @@ jobs:
     - name: 'Push Docker image to registry'
       run: docker push uggla/planetoid
 
+    - name: 'Logout and clean credentials'
+      run: docker logout && rm -f /home/runner/.docker/config.json
 
   build_client_macos:
     name: Build clients MacOS
