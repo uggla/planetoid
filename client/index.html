@@ -4,8 +4,16 @@
     <meta charset="utf-8">
     <title>Planetoid</title>
     <style>
-        html,
-        body,
+        @font-face {
+            font-family: SpaceFont;
+            src: url(fonts/BebasNeue-Regular.ttf);
+        }
+
+        html {
+            background: url(images/space.webp) no-repeat center fixed;
+            background-size: cover;
+        }
+
         canvas {
             margin: 0px;
             padding: 0px;
@@ -16,10 +24,34 @@
             background: black;
             z-index: 0;
         }
+
+        #control {
+            float:right;
+            margin-right:320px;
+        }
+
+        h1 {
+            color:white;
+            font-family: SpaceFont;
+            font-size:70px;
+        }
+
+        h2 { color:white;}
+
+        ul { color:white;}
     </style>
 </head>
 
 <body>
+    <h1>Planetoid</h1>
+    <div id=control>
+    <h2>Control</h2>
+    <ul>
+        <li><b>Right</b> and <b>left</b> arrow keys to turn the ship right and left.</li>
+        <li><b>Space</b> key to shoot.</li>
+        <li><b>F</b> key to display fps.</li>
+    </ul>
+    </div>
     <canvas id="glcanvas" tabindex='1'></canvas>
     <!-- Minified and statically hosted version of https://github.com/not-fl3/macroquad/blob/master/js/mq_js_bundle.js -->
     <script src="https://not-fl3.github.io/miniquad-samples/mq_js_bundle.js"></script>
