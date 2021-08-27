@@ -26,6 +26,7 @@ pub fn manage_gameover(
 
     if asteroids.is_empty() {
         status = "You win !";
+        // TODO: There is a bug here, sound should be played only one time.
         audio::play_sound_once(*victory_sound);
     }
 
