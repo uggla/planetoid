@@ -39,6 +39,13 @@ This project is in an early stage, so a lot of features are missing and need to 
 * `F` key to display fps.
 * `Esc` key to quit the game.
 
+## Demo
+Online demo can be played [here](https://planetoid.uggla.fr).
+
+*Note:*
+* *only solo mode is available online.*
+* *loading the game can take time.*
+
 ## Screenshots
 
 Native application:
