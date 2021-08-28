@@ -1,9 +1,8 @@
-use crate::MAX_ASTEROIDS;
-use macroquad::audio::{self, Sound};
-use macroquad::prelude::*;
-
 use crate::asteroid::Asteroids;
 use crate::ship::Ship;
+use crate::sound::Sound;
+use crate::MAX_ASTEROIDS;
+use macroquad::prelude::*;
 
 #[allow(clippy::too_many_arguments)]
 pub fn manage_gameover(
@@ -14,8 +13,7 @@ pub fn manage_gameover(
     frame_count: &mut u32,
     gameover: &mut bool,
     gameover_msg_sent: &mut bool,
-    explosion_sound_played: &mut bool,
-    victory_sound: &Sound,
+    sound: &mut Sound,
 ) {
     // Take care this part is executed in a loop !
     // host is looping until the enter key is pressed
@@ -26,8 +24,7 @@ pub fn manage_gameover(
 
     if asteroids.is_empty() {
         status = "You win !";
-        // TODO: There is a bug here, sound should be played only one time.
-        audio::play_sound_once(*victory_sound);
+        sound.victory();
     }
 
     if mode == "host" {
@@ -51,7 +48,7 @@ pub fn manage_gameover(
         *gameover = false;
         *gameover_msg_sent = false;
         *asteroids = Asteroids::generate_field(String::from(name), 0);
-        *explosion_sound_played = false;
+        sound.reset_played_sound();
         if mode == "host" {
             *asteroids = Asteroids::generate_field(String::from(name), MAX_ASTEROIDS);
         }

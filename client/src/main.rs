@@ -6,6 +6,7 @@ mod gameover;
 mod network;
 mod screen;
 mod ship;
+mod sound;
 use crate::asteroid::Asteroids;
 use crate::collision::manage_collisions;
 #[cfg(not(target_arch = "wasm32"))]
@@ -14,9 +15,10 @@ use crate::network::{
     wait_synchronization_data,
 };
 use crate::{gameover::manage_gameover, ship::Ship};
-use macroquad::{audio, prelude::*};
+use macroquad::prelude::*;
 #[cfg(not(target_arch = "wasm32"))]
 use simple_logger::SimpleLogger;
+use sound::Sound;
 #[cfg(not(target_arch = "wasm32"))]
 use std::{net::TcpStream, sync::mpsc, thread, thread::sleep, time::Duration};
 use structopt::clap::{crate_name, crate_version};
@@ -126,12 +128,7 @@ async fn main() {
     let mut fps_t = get_time();
     let mut debounce_t = get_time();
 
-    set_pc_assets_folder("sounds");
-    let laser_sound = audio::load_sound("laser.wav").await.unwrap();
-    let thrust_sound = audio::load_sound("thrust.wav").await.unwrap();
-    let explosion_sound = audio::load_sound("explosion.wav").await.unwrap();
-    let victory_sound = audio::load_sound("victory.wav").await.unwrap();
-    let mut explosion_sound_played = false;
+    let mut sound = Sound::new().await;
 
     #[allow(unused_mut)]
     let mut sync_t: f64 = 0.0;
@@ -261,8 +258,7 @@ async fn main() {
                 &mut frame_count,
                 &mut gameover,
                 &mut gameover_msg_sent,
-                &mut explosion_sound_played,
-                &victory_sound,
+                &mut sound,
             );
 
             // Display frame but do not increase frame_count to not send new messages
@@ -298,7 +294,7 @@ async fn main() {
                     if ship.name() == opt.name && !ship.collided() {
                         ship.accelerate();
                         if frame_t - thrust_t > 0.5 {
-                            audio::play_sound_once(thrust_sound);
+                            sound.thrust();
                             thrust_t = frame_t;
                         }
                     }
@@ -309,7 +305,7 @@ async fn main() {
                 for ship in players.iter_mut() {
                     if ship.name() == opt.name && !ship.collided() {
                         ship.shoot(frame_t);
-                        audio::play_sound_once(laser_sound);
+                        sound.laser();
                     }
                 }
                 lastshot_t = frame_t;
@@ -368,10 +364,9 @@ async fn main() {
 
         if players
             .iter()
-            .any(|ship| ship.name() == opt.name && ship.collided() && !explosion_sound_played)
+            .any(|ship| ship.name() == opt.name && ship.collided())
         {
-            audio::play_sound_once(explosion_sound);
-            explosion_sound_played = true;
+            sound.explosion();
         }
 
         if asteroids.is_empty() || players.iter().all(|ship| ship.collided()) {
