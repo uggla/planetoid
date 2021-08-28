@@ -338,7 +338,7 @@ async fn main() {
             debounce_t = frame_t;
         }
 
-        if is_key_down(KeyCode::Escape) {
+        if cfg!(not(target_arch = "wasm32")) && is_key_down(KeyCode::Escape) {
             break;
         }
 
