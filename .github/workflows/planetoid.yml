@@ -75,20 +75,25 @@ jobs:
       env:
         registry_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
       run: echo "$registry_password" | docker login -u uggla --password-stdin
+      if: github.ref == 'refs/heads/main'
 
     - name: 'Build Docker image'
       working-directory: ./client
       run: docker build -t planetoid .
+      if: github.ref == 'refs/heads/main'
 
     - name: 'Tag Docker image'
       working-directory: ./client
       run: docker tag planetoid:latest uggla/planetoid:latest
+      if: github.ref == 'refs/heads/main'
 
     - name: 'Push Docker image to registry'
       run: docker push uggla/planetoid
+      if: github.ref == 'refs/heads/main'
 
     - name: 'Logout and clean credentials'
       run: docker logout && rm -f /home/runner/.docker/config.json
+      if: github.ref == 'refs/heads/main'
 
   build_client_macos:
     name: Build clients MacOS
