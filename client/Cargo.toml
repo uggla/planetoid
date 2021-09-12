@@ -7,11 +7,11 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-macroquad = "0.3.8"
+macroquad = "0.3.9"
 url = '2.2.2'
-serde = {version = "1.0.128", features = ["derive"]}
-serde_json = "1.0"
-structopt = "0.3.22"
+serde = {version = "1.0.130", features = ["derive"]}
+serde_json = "1.0.67"
+structopt = "0.3.23"
 log = "0.4.14"
 simple_logger = "1.13.0"
 
