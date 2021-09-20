@@ -381,9 +381,9 @@ dependencies = [
 
 [[package]]
 name = "macroquad"
-version = "0.3.9"
+version = "0.3.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5c11792fb3af71339e4354ee3dbde4bbe5731dac266cc087b414338dfb1ca1bd"
+checksum = "d54a31d3996831b27b429f8e9d7b948aa589d3571305eba39f57b4600bd2cd01"
 dependencies = [
  "bumpalo",
  "fontdue",
@@ -397,9 +397,9 @@ dependencies = [
 
 [[package]]
 name = "macroquad_macro"
-version = "0.1.6"
+version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "15db41b6abd0156c498868ec69f8973731ef75874768ac234980422579e70805"
+checksum = "f5cecfede1e530599c8686f7f2d609489101d3d63741a6dc423afc997ce3fcc8"
 
 [[package]]
 name = "matches"
