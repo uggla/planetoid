@@ -2,20 +2,20 @@
 
 Planetoid is a toy project to demonstrate and learn several technologies.
 The goal is to create a little multiplayer [asteriod](https://en.wikipedia.org/wiki/Asteroids_(video_game)) game clone.
-* Server side is composed with 2 parts:
+* Server-side is composed of 2 parts:
     * A server based on a [Quarkus](https://quarkus.io/) application. The goal of this application will be to:
       * Show games in progress and terminated with participants and winner.
       * Allow users to authenticate and add comments to a specific game.
-      * Launch workers to allow several games in parallel each with individual players.
+      * Launch workers to allow several games in parallel, each with individual players.
     * A worker based on a [Quarkus](https://quarkus.io/) application using websockets derived from the chat example. The goal of this application is currently to:
       * Pass game messages between clients.
-* Client side is a [Rust](https://www.rust-lang.org/) application using [macroquad](https://github.com/not-fl3/macroquad) framework. As well, it was derived from the asteroid example, but refactored in a more object oriented code. It can be compiled as:
+* Client-side is a [Rust](https://www.rust-lang.org/) application using [macroquad](https://github.com/not-fl3/macroquad) framework. It was also derived from the asteroid example but refactored in a more object-oriented code. It can be compiled as:
     * A native application that will use websockets ([tungstenite](https://github.com/snapview/tungstenite-rs)) to share game data. Only Linux has been fully tested so far, but it should run on Windows/MacOs as well.
-    * A wasm32 application, that can be run in a browser. Currently websockets are not implemented, but the game can be played in solo mode.
+    * A wasm32 application that can be run in a browser. Currently, websockets are not implemented, but the game can be played in solo mode.
 * Deployment on [Kubernetes](https://kubernetes.io/) for the server and the required infrastructure to capture metrics ([Prometheus](https://prometheus.io/) / [Grafana](https://grafana.com/)) as well as authentication ([Keycloak](https://www.keycloak.org/)) and persistance ([Postgres](https://www.postgresql.org/)).
 
 
-This project is in an early stage, so a lot of features are missing and need to be implemented. However, as stated at the beginning, the goal is not to propose a real game but a demo to explain and share about these technologies.
+This project is in an early stage, so many features are missing and need to be implemented. However, as stated initially, the goal is not to propose a real game but a demo to explain and share these technologies.
 
 
 ## Targeted infra overview
@@ -23,10 +23,10 @@ This project is in an early stage, so a lot of features are missing and need to 
 
 ## Project current status
 * Clients (native and wasm) can be built and run. Wasm can only run solo mode.
-* Worker allows to play multiplayer game:
-    * Native client can share the game with a spectator. Spectator is another native client started in the spectator mode.
-    * Multiplayer game. Native client can be run as host and several guests can connect to destroy asteroids together.
-* Server is a WIP, this is currently just exposing 2 tables with hibernate/panache and a couple of api routes.
+* Worker allows playing a multiplayer game:
+    * Native client can share the game with a spectator. A spectator is another native client started in the spectator mode.
+    * Multiplayer game. A native client can be run as host, and several guests can connect to destroy asteroids together.
+* Server is a WIP. It is currently just exposing two tables with hibernate/panache and a couple of API routes.
 
 
 ## Authors
@@ -40,7 +40,7 @@ This project is in an early stage, so a lot of features are missing and need to 
 * `Esc` key to quit the game.
 
 ## Demo
-Online demo can be played [here](https://planetoid.uggla.fr).
+An online demo can be played [here](https://planetoid.uggla.fr).
 
 *Note:*
 * *only solo mode is available online.*
@@ -62,7 +62,7 @@ Multiplayer game:
 Binaries are available here:
 [Binary releases](https://github.com/uggla/planetoid/releases)
 
-## Run Locally (mainly for development purpose)
+## Run Locally (mainly for development purposes)
 
 1. Clone the project
 
@@ -85,7 +85,7 @@ Ex on Fedora
   dnf install java-11-openjdk-devel
 ```
 
-2. Install maven > 3.6 following the instructions [here](https://maven.apache.org/install.html) or install it using your distribution mackage manager. Ex on Fedora:
+2. Install maven > 3.6 following the instructions [here](https://maven.apache.org/install.html) or install it using your distribution package manager. Ex on Fedora:
 
 ```bash
   dnf install maven
@@ -97,14 +97,14 @@ Ex on Fedora
 cd worker
 mvn compile quarkus:dev
 ```
-*Note: maven will download a lot of dependencies from the internet*
+*Note: Maven will download a lot of dependencies from the internet*
 
 ### Client
 
 #### Native client
 1. Install Rust following the instructions [here](https://www.rust-lang.org/fr/learn/get-started).
 
-   *Tips: the rustup method is the simplest method.*
+   *Tips: the rustup method is the simplest one.*
 
 2. Install required library for macroquad
 
@@ -120,7 +120,7 @@ dnf install libX11-devel libXi-devel mesa-libGL-devel alsa-lib-devel
 
 * Windows system
 ```
-No dependencies are required for windows
+No dependencies are required for Windows or MacOS
 ```
 
 3. Go to the client directory and run the native client
@@ -168,7 +168,7 @@ xdg-open http://127.0.0.1:4000
 ## Native client usage
 ```
 Planetoid 0.1.0
-Planetoid is a asteroid clone
+Planetoid is an asteroid clone.
 
 USAGE:
     planetoid [FLAGS] [OPTIONS]
@@ -199,9 +199,9 @@ On the second terminal:
 `cargo run -- -m spectator -n "Planetoid spectator"`
 
 #### Running in network mode, debug and as god
-`-dd`: debug allow to see messages sent to the web socket.
+`-dd`: debug, allows to see messages sent to the web socket.
 
-`-g`: god mode, ship cannot be destroyed.
+`-g`: god mode, player ship cannot be destroyed.
 
 `-n`: player name (default: planetoid)
 

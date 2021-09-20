@@ -30,7 +30,7 @@ use url::Url;
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = crate_name!(), version = crate_version!())]
-/// Planetoid is an asteroid clone
+/// Planetoid is an asteroid clone.
 
 struct Opt {
     /// Debug mode (ϕ (error), -d (info), -dd (debug), -ddd (trace))
