@@ -116,7 +116,11 @@ async fn main() {
     let log_level = get_log_level(opt.debug);
 
     #[cfg(not(target_arch = "wasm32"))]
-    SimpleLogger::new().with_level(log_level).init().unwrap();
+    SimpleLogger::new()
+        .with_utc_timestamps()
+        .with_level(log_level)
+        .init()
+        .unwrap();
     log::debug!("{:#?}", opt);
     log::info!("Starting game.");
 
