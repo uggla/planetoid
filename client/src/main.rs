@@ -34,14 +34,17 @@ use url::Url;
 
 struct Opt {
     /// Debug mode (ϕ (error), -d (info), -dd (debug), -ddd (trace))
+    #[cfg(not(target_arch = "wasm32"))]
     #[structopt(short, long, parse(from_occurrences))]
     debug: u8,
 
     /// Host
+    #[cfg(not(target_arch = "wasm32"))]
     #[structopt(short, long, default_value = "localhost")]
     host: String,
 
     /// Port
+    #[cfg(not(target_arch = "wasm32"))]
     #[structopt(short, long, default_value = "8080")]
     port: u16,
 
@@ -54,6 +57,7 @@ struct Opt {
     mode: String,
 
     /// Solo mode, do not connect to network
+    #[cfg(not(target_arch = "wasm32"))]
     #[structopt(short, long, conflicts_with = "mode")]
     solo: bool,
 
