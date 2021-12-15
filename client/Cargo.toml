@@ -13,7 +13,11 @@ serde = {version = "1.0.131", features = ["derive"]}
 serde_json = "1.0.72"
 structopt = "0.3.25"
 log = "0.4.14"
-simple_logger = "1.15.1"
+
+[dependencies.simple_logger]
+version = "1.16.0"
+# default-features = false
+# features = ["timestamps_utc","colors","stderr"]
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 tungstenite = '0.16.0'
