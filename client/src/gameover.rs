@@ -19,7 +19,6 @@ pub fn manage_gameover(
     // host is looping until the enter key is pressed
     clear_background(LIGHTGRAY);
     let mut status = "Game over.";
-    let text: String;
     let font_size = 30.;
 
     if asteroids.is_empty() {
@@ -27,11 +26,12 @@ pub fn manage_gameover(
         sound.victory();
     }
 
-    if mode == "host" {
-        text = format!("{} Press [enter] to play again.", status);
+    let text: String = if mode == "host" {
+        format!("{} Press [enter] to play again.", status)
     } else {
-        text = format!("{} Wait host player to restart game.", status);
-    }
+        format!("{} Wait host player to restart game.", status)
+    };
+
     let text_size = measure_text(&text, None, font_size as _, 1.0);
     draw_text(
         &text,
