@@ -1,5 +1,7 @@
 # Planetoid
 
+[![Planetoid](https://github.com/uggla/planetoid/actions/workflows/planetoid.yml/badge.svg)](https://github.com/uggla/planetoid/actions/workflows/planetoid.yml)
+
 Planetoid is a toy project to demonstrate and learn several technologies.
 The goal is to create a little multiplayer [asteriod](https://en.wikipedia.org/wiki/Asteroids_(video_game)) game clone.
 * Server-side is composed of 2 parts:
