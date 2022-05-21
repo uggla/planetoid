@@ -15,7 +15,7 @@ pub fn is_collided<A: Collided, B: Collided>(obj1: &A, obj2: &B) -> bool {
 }
 
 pub fn manage_collisions(
-    players: &mut Vec<Ship>,
+    players: &mut [Ship],
     asteroids: &mut Asteroids,
     name: String,
     god: bool,
@@ -23,7 +23,7 @@ pub fn manage_collisions(
     frame_t: f64,
     sync_t: f64,
 ) {
-    let mut opponents = players.clone();
+    let mut opponents = players.to_vec();
     for ship in players.iter_mut() {
         ship_vs_asteroids(ship, asteroids, name.clone(), god, mode, sync_t);
         ship_vs_opponents(ship, &mut opponents);
@@ -101,7 +101,7 @@ fn ship_bullet_vs_asteroid(
     }
 }
 
-fn ship_vs_opponents(ship: &mut Ship, opponents: &mut Vec<Ship>) {
+fn ship_vs_opponents(ship: &mut Ship, opponents: &mut [Ship]) {
     for opponent in opponents.iter_mut() {
         if opponent.name() != ship.name() {
             ship_bullet_vs_opponents(ship, opponent);

@@ -108,12 +108,12 @@ pub fn deserialize_host_data(
 
 pub fn serialize_host_data(
     asteroids: &mut Asteroids,
-    players: &mut Vec<Ship>,
+    players: &mut [Ship],
     gameover: &mut bool,
 ) -> String {
     let gamedata = GameData {
         asteroids: asteroids.clone(),
-        players: players.clone(),
+        players: players.to_vec(),
         gameover: *gameover,
     };
 
