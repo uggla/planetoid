@@ -15,7 +15,7 @@ structopt = "0.3.26"
 log = "0.4.16"
 
 [dependencies.simple_logger]
-version = "2.1.0"
+version = "2.2.0"
 # default-features = false
 # features = ["timestamps_utc","colors","stderr"]
 
